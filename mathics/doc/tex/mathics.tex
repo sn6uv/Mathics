@@ -23,8 +23,6 @@
 \usepackage{makeidx}
 \usepackage{graphicx}
 \usepackage{asymptote}
-\usepackage[hypertexnames=false]{hyperref} % make hyperref aware of chapter reset for built-in symbols
-% (http://tex.stackexchange.com/questions/6098/wrong-hyper-references-after-resetting-chapter-counter)
 \usepackage{listings}
 \usepackage{paralist}
 \usepackage{color}
@@ -37,8 +35,12 @@
 \usepackage{breqn}
 \usepackage{environ}
 \usepackage{multicol}
-
 \usepackage[k-tight]{minitoc}
+
+% hyperref should be the last package included
+\usepackage[hypertexnames=false]{hyperref} % make hyperref aware of chapter reset for built-in symbols
+% (http://tex.stackexchange.com/questions/6098/wrong-hyper-references-after-resetting-chapter-counter)
+
 \setlength{\mtcindent}{0pt}
 \mtcsetformat{minitoc}{tocrightmargin}{2.55em plus 1fil}
 \newcommand{\multicolumnmtc}{3}
@@ -222,6 +224,7 @@ led by Jan Pöschko}
 breaklines=true,
 breakatwhitespace=false,
 showspaces=false,
+extendedchars=true,
 basicstyle=\ttfamily
 }
 
