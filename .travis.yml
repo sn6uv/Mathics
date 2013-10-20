@@ -17,7 +17,7 @@ matrix:
 before_install:
   - if [[ "$TEST_DOC" == "true" ]]; then
       sudo apt-get update -qq;
-      sudo apt-get install -qq asymptote texlive-full;
+      sudo apt-get install -qq asymptote texlive-full imagemagick;
     fi
   - pip install --use-mirrors git+https://github.com/sympy/sympy.git@$SYMPY_SRC
 install:
@@ -27,7 +27,7 @@ script:
       python mathics/test.py -o;
       python mathics/test.py -t;
       cd mathics/doc/;
-      images.sh;
+      ./images.sh;
       cd tex/;
       make latex;
       cd ../../../;
