@@ -193,11 +193,11 @@ def test_all(quiet=False, generate_output=False):
         print '\nOK'
 
         if generate_output:
-            print 'Save XML'
+            print 'Save XML', settings.DOC_XML_DATA
             with open_ensure_dir(settings.DOC_XML_DATA, 'w') as output_file:
                 pickle.dump(output_xml, output_file, 0)
 
-            print 'Save TEX'
+            print 'Save TEX', settings.DOC_TEX_DATA
             with open_ensure_dir(settings.DOC_TEX_DATA, 'w') as output_file:
                 pickle.dump(output_tex, output_file, 0)
     else:
@@ -206,11 +206,11 @@ def test_all(quiet=False, generate_output=False):
 
 
 def write_latex():
-    print "Load data"
+    print "Load data", settings.DOC_TEX_DATA
     with open_ensure_dir(settings.DOC_TEX_DATA, 'r') as output_file:
         output_tex = pickle.load(output_file)
 
-    print 'Print documentation'
+    print 'Print documentation', settings.DOC_LATEX_FILE
     with open_ensure_dir(settings.DOC_LATEX_FILE, 'w') as doc:
         content = documentation.latex(output_tex)
         content = content.encode('utf-8')

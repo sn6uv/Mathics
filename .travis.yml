@@ -17,11 +17,11 @@ matrix:
 before_install:
   - if [[ "$TEST_DOC" == "true" ]]; then
       sudo apt-get update -qq &&
-      sudo apt-get install -qq asymptote imagemagick texlive-latex-base;
+      sudo apt-get install -qq asymptote imagemagick texlive-latex-base texlive-latex-recommend latexmk;
     fi
   - pip install --use-mirrors git+https://github.com/sympy/sympy.git@$SYMPY_SRC
 install:
-  - python setup.py install
+  - if [[ "$TEST_DOC" == "true" ]]; then python setup.py develop; else python setup.py install; fi
 script:
   - if [[ "$TEST_DOC" == "true" ]]; then
       python mathics/test.py -o &&
@@ -29,8 +29,7 @@ script:
       cd mathics/doc/ &&
       ./images.sh &&
       cd tex/ &&
-      make latex &&
-      cd ../../../;
+      make latex;
     else
       python mathics/test.py;
     fi
