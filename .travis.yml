@@ -24,13 +24,13 @@ install:
   - python setup.py install
 script:
   - if [[ "$TEST_DOC" == "true" ]]; then
-      python mathics/test.py -o;
-      python mathics/test.py -t;
-      cd mathics/doc/;
-      ./images.sh;
-      cd tex/;
-      make latex;
-      cd ../../../;
+      python mathics/test.py -o &&
+      python mathics/test.py -t &&
+      cd mathics/doc/ &&
+      ./images.sh &&
+      cd tex/ &&
+      make latex &&
+      cd ../../../
     else
       python mathics/test.py;
     fi
