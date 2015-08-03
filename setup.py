@@ -28,7 +28,7 @@ import platform
 from setuptools import setup, Command, Extension
 
 # Ensure user has the correct Python version
-if sys.version_info[:2] != (2, 7) and sys.version_info < (3, 3):
+if sys.version_info[:2] != (2, 7) and sys.version_info < (3, 2):
     print("Mathics does not support Python %d.%d" % sys.version_info[:2])
     sys.exit(-1)
 
