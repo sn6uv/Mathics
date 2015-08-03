@@ -24,21 +24,18 @@ mathics-users@googlegroups.com and ask for help.
 """
 
 import sys
+import platform
 from setuptools import setup, Command, Extension
 
 # Ensure user has the correct Python version
 if sys.version_info[:2] != (2, 7) and sys.version_info < (3, 3):
-    print("Mathics supports Python 2.7. \
-Python %d.%d detected" % sys.version_info[:2])
+    print("Mathics does not support Python %d.%d" % sys.version_info[:2])
     sys.exit(-1)
 
 # stores __version__ in the current namespace
-execfile('mathics/version.py')
+exec(compile(open('mathics/version.py').read(), 'mathics/version.py', 'exec'))
 
-if sys.subversion[0] == 'PyPy':
-    is_PyPy = True
-else:
-    is_PyPy = False
+is_PyPy = (platform.python_implementation() == 'PyPy')
 
 try:
     if is_PyPy:
@@ -56,7 +53,7 @@ else:
     EXTENSIONS = [
         Extension('mathics.%s.%s' % (parent, module),
                   ['mathics/%s/%s.py' % (parent, module)])
-        for parent, modules in EXTENSIONS.iteritems() for module in modules]
+        for parent, modules in EXTENSIONS.items() for module in modules]
     CMDCLASS = {'build_ext': build_ext}
     INSTALL_REQUIRES = ['cython>=0.15.1']
 
@@ -96,7 +93,7 @@ class initialize(Command):
         import os
         import subprocess
         settings = {}
-        execfile('mathics/settings.py', settings)
+        exec(compile(open('mathics/settings.py').read(), 'mathics/settings.py', 'exec'), settings)
 
         database_file = settings['DATABASES']['default']['NAME']
         print("Creating data directory %s" % settings['DATA_DIR'])
