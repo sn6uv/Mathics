@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 from mathics.builtin.base import Builtin
 from mathics.core.expression import Expression, Integer
 from mathics.core.convert import from_sympy

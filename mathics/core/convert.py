@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import sympy
 
 sympy_symbol_prefix = '_Mathics_User_'

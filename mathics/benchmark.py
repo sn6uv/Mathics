@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 # Default number of times to repeat each benchmark. None -> Automatic
 TESTS_PER_BENCHMARK = None
 

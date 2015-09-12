@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+from __future__ import unicode_literals
 # cython: profile=False
 
 from mathics.core.expression import (Expression, system_symbols,

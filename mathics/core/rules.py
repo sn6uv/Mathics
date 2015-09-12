@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 from mathics.core.expression import Expression, Symbol, strip_context
 # from mathics.core.util import subsets, subranges, permutations
 from mathics.core.pattern import Pattern, StopGenerator

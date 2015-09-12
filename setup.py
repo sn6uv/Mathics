@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+from __future__ import unicode_literals
 """Setuptools based setup script for Mathics.
 
 For the easiest installation just type the following command (you'll probably

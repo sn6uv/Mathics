@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 u"""
     Mathics: a general-purpose computer algebra system
     Copyright (C) 2011 Jan Pöschko
