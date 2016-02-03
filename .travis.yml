@@ -34,6 +34,7 @@ before_install:
       pip install cython;
     fi
   - pip install ipython
+  - pip install ipykernel
   - pip install unittest2
   - pip install pexpect
   - pip install git+https://github.com/sympy/sympy.git@$SYMPY_SRC
