@@ -15,13 +15,10 @@ from mathics.doc import Doc
 class MathicsKernel(Kernel):
     implementation = 'Mathics'
     implementation_version = __version__
-    language = 'Wolfram'
     language_version = '0.1'    # TODO
     language_info = {
-        'name': 'mathics',
+        'name': 'Mathematica',
         'mimetype': 'text/x-mathematica',
-        'codemirror_mode': 'Mathematica',
-        'pygments_lexer': 'Mathematica',
     }
     banner = "Mathics kernel"   # TODO
 
