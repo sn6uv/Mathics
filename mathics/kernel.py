@@ -19,8 +19,9 @@ class MathicsKernel(Kernel):
     language_version = '0.1'    # TODO
     language_info = {
         'name': 'mathics',
-        'mimetype': 'text/plain',
-        'file_extension': 'm',
+        'mimetype': 'text/x-mathematica',
+        'codemirror_mode': 'Mathematica',
+        'pygments_lexer': 'Mathematica',
     }
     banner = "Mathics kernel"   # TODO
 
