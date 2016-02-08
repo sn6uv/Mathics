@@ -52,7 +52,7 @@ def valuesname(name):
 
 
 class Definitions(object):
-    def __init__(self, add_builtin=False, builtin_filename=None):
+    def __init__(self, add_builtin=False, cache=False):
         super(Definitions, self).__init__()
         self.builtin = {}
         self.user = {}
@@ -62,20 +62,20 @@ class Definitions(object):
             from mathics.core.evaluation import Evaluation
             from mathics.settings import ROOT_DIR
 
-            loaded = False
-            if builtin_filename is not None:
+            if cache:
+                cache_filename = os.path.join(ROOT_DIR, 'definitions_cache')
                 builtin_dates = [get_file_time(module.__file__)
                                  for module in modules]
                 builtin_time = max(builtin_dates)
-                if get_file_time(builtin_filename) > builtin_time:
-                    builtin_file = open(builtin_filename, 'r')
-                    self.builtin = pickle.load(builtin_file)
-                    loaded = True
-            if not loaded:
+                if get_file_time(cache_filename) > builtin_time:
+                    with open(cache_filename, 'rb') as cache_file:
+                        self.builtin = pickle.load(cache_file)
+                else:
+                    contribute(self)
+                    with open(cache_filename, 'wb') as cache_file:
+                        pickle.dump(self.builtin, cache_file, 2)
+            else:
                 contribute(self)
-                if builtin_filename is not None:
-                    builtin_file = open(builtin_filename, 'w')
-                    pickle.dump(self.builtin, builtin_file, -1)
 
             for root, dirs, files in os.walk(   # noqa
                 os.path.join(ROOT_DIR, 'autoload')):

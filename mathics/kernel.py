@@ -24,7 +24,7 @@ class MathicsKernel(Kernel):
 
     def __init__(self, **kwargs):
         Kernel.__init__(self, **kwargs)
-        self.definitions = Definitions(add_builtin=True, builtin_filename='mathics_cache')
+        self.definitions = Definitions(add_builtin=True, cache=True)
         self.definitions.set_ownvalue('$Line', Integer(0))  # Reset the line number
 
     def do_execute(self, code, silent, store_history=True, user_expressions=None,
