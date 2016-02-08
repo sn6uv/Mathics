@@ -319,9 +319,6 @@ class Evaluation(object):
         # attached to.
         symbol_shortname = self.definitions.shorten_name(symbol)
 
-        if settings.DEBUG_PRINT:
-            print 'MESSAGE: %s::%s (%s)' % (symbol_shortname, tag, args)
-
         pattern = Expression('MessageName', Symbol(symbol), String(tag))
         text = self.definitions.get_value(
             symbol, 'System`Messages', pattern, self)
@@ -348,8 +345,6 @@ class Evaluation(object):
         self.out.append(Print(text))
         if self.out_callback:
             self.out_callback(self.out[-1])
-        if settings.DEBUG_PRINT:
-            print 'OUT: ' + text
 
     def error(self, symbol, tag, *args):
         # Temporarily reset the recursion limit, to allow the message being

@@ -44,11 +44,6 @@ class MathicsKernel(Kernel):
             response['ename'] = 'System:exception'
             response['traceback'] = traceback.format_exception(*sys.exc_info())
             evaluation = Evaluation()
-            # if settings.DEBUG:
-            #     info = '\n'.join(response['traceback'])
-            #     msg = 'Exception raised: %s\n\n%s' % (exc, info)
-            #     msg = Message('System', 'exception', msg)
-            #     evaluation.results = [Result([msg], None, None)]
             raise exc
         else:
             response['status'] = 'ok'

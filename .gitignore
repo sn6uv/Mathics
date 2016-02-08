@@ -35,6 +35,4 @@ mathics/doc/tex/mathics-*.pdf
 mathics/doc/tex/mathics.toc
 mathics/doc/xml/
 mathics/Makefile
-mathics/web/db/mathics.sqlite
-mathics/web/media/pdf/
 Test/
