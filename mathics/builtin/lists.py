@@ -1835,8 +1835,8 @@ def riffle_lists(items, seps):
         seps = seps * (len(items) / len(seps) + 1)
     if len(seps) > len(items):
         seps = seps[:len(items) - 1]
-    return [val for pair in (map(None, items, seps))
-            for val in pair if val is not None]
+    assert len(items) == len(seps)
+    return [val for pair in zip(items, seps) for val in pair if val is not None]
 
 
 class Riffle(Builtin):
