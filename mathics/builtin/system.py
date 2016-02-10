@@ -5,6 +5,7 @@
 System functions
 """
 
+from __future__ import absolute_import
 import re
 
 from mathics.core.expression import Expression, String, strip_context

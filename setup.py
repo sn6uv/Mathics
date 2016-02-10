@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-
 """Setuptools based setup script for Mathics.
 
 For the easiest installation just type the following command (you'll probably
@@ -26,6 +24,10 @@ To get a full list of avaiable commands, read the output of:
 Or, if all else fails, feel free to write to the sympy list at
 mathics-users@googlegroups.com and ask for help.
 """
+
+from __future__ import print_function
+from __future__ import absolute_import
+from six.moves import range
 
 import sys
 import platform

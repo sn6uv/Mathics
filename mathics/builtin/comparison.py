@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import sympy
 
 from mathics.builtin.base import Builtin, BinaryOperator, Test, SympyFunction
 from mathics.core.expression import (Expression, Number, Integer, Rational,
                                      Real, Symbol, String)
 from mathics.core.numbers import get_type, dps
+from six.moves import range
+from six.moves import zip
 
 
 class SameQ(BinaryOperator):
@@ -68,7 +71,7 @@ class _InequalityOperator(BinaryOperator):
         # Parse multiple inequalities.
         # "a op b op c" -> op[a, b, c]
         # "a op1 b op2 c" -> Inequality[a, op1, b, op2, c]
-        names = operators.keys()
+        names = list(operators.keys())
 
         def inequality_leaves(expression):
             if expression.parenthesized:
@@ -165,7 +168,7 @@ class Inequality(Builtin):
             evaluation.message('Inequality', 'ineq', count)
         elif count == 3:
             name = items[1].get_name()
-            if name in operators.keys():
+            if name in list(operators.keys()):
                 return Expression(name, items[0], items[2])
         else:
             groups = [Expression('Inequality', *items[index - 1:index + 2])

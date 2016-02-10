@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import re
 
 from mathics.builtin.base import (
@@ -11,6 +12,7 @@ from mathics.builtin.lists import walk_parts
 from mathics.builtin.evaluation import set_recursionlimit
 
 from mathics import settings
+from six.moves import zip
 
 
 def get_symbol_list(list, error_callback):
@@ -704,7 +706,7 @@ class Definition(Builtin):
                 print_rule(rule, up=True)
             for rule in definition.nvalues:
                 print_rule(rule)
-            formats = definition.formatvalues.items()
+            formats = list(definition.formatvalues.items())
             formats.sort()
             for format, rules in formats:
                 for rule in rules:
@@ -720,7 +722,7 @@ class Definition(Builtin):
         for rule in all.defaultvalues:
             print_rule(rule)
         if all.options:
-            options = all.options.items()
+            options = list(all.options.items())
             options.sort()
             lines.append(
                 Expression('HoldForm', Expression(

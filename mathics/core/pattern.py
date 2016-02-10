@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 # cython: profile=False
 
+from __future__ import absolute_import
 from mathics.core.expression import (Expression, system_symbols,
                                      ensure_context)
 from mathics.core.util import subsets, subranges, permutations
+from six.moves import range
 
 # from mathics.core.pattern_nocython import (
 #    StopGenerator #, Pattern #, ExpressionPattern)
@@ -71,7 +73,7 @@ class Pattern(object):
             raise StopGenerator_Pattern(True)
         try:
             self.match(yield_match, expression, vars, evaluation, fully=fully)
-        except StopGenerator_Pattern, exc:
+        except StopGenerator_Pattern as exc:
             return exc.value
         return False
 
@@ -312,14 +314,14 @@ class ExpressionPattern(Pattern):
                                 setting[name] = wrapping
                                 yield_name(setting)
                             per_name(yield_next, groups[1:], vars)
-                    per_expr(yield_expr, expr_groups.items())
+                    per_expr(yield_expr, list(expr_groups.items()))
                 else:  # no groups left
                     yield_name(vars)
 
             # for setting in per_name(groups.items(), vars):
             # def yield_name(setting):
             #    yield_func(setting)
-            per_name(yield_func, groups.items(), vars)
+            per_name(yield_func, list(groups.items()), vars)
         else:
             yield_func(vars)
 

@@ -5,11 +5,13 @@
 Importing and Exporting
 """
 
+from __future__ import absolute_import
 from mathics.core.expression import Expression, from_python
 from mathics.builtin.base import Builtin, Predefined, Symbol, String
 
-from pymimesniffer import magic
+from .pymimesniffer import magic
 import mimetypes
+import six
 
 
 mimetypes.add_type('application/vnd.wolfram.mathematica.package', '.m')
@@ -293,7 +295,7 @@ class Import(Builtin):
 
         # Check filename
         path = filename.to_python()
-        if not (isinstance(path, basestring) and path[0] == path[-1] == '"'):
+        if not (isinstance(path, six.string_types) and path[0] == path[-1] == '"'):
             evaluation.message('Import', 'chtype', filename)
             return Symbol('$Failed')
 
@@ -317,7 +319,7 @@ class Import(Builtin):
 
         # Determine file type
         for el in elements:
-            if el in IMPORTERS.keys():
+            if el in list(IMPORTERS.keys()):
                 filetype = el
                 elements.remove(el)
                 break
@@ -325,7 +327,7 @@ class Import(Builtin):
             filetype = Expression('FileFormat', findfile).evaluate(
                 evaluation=evaluation).get_string_value()
 
-        if filetype not in IMPORTERS.keys():
+        if filetype not in list(IMPORTERS.keys()):
             evaluation.message('Import', 'fmtnosup', filetype)
             return Symbol('$Failed')
 
@@ -361,7 +363,7 @@ class Import(Builtin):
             # return {a.get_string_value() : b for (a,b) in map(lambda x:
             # x.get_leaves(), tmp)}
             return dict((a.get_string_value(), b)
-                        for (a, b) in map(lambda x: x.get_leaves(), tmp))
+                        for (a, b) in [x.get_leaves() for x in tmp])
 
         # Perform the import
         defaults = None
@@ -390,15 +392,15 @@ class Import(Builtin):
                     return Symbol('$Failed')
                 # Use set() to remove duplicates
                 return from_python(sorted(set(
-                    conditionals.keys() + defaults.keys() + posts.keys())))
+                    list(conditionals.keys()) + list(defaults.keys()) + list(posts.keys()))))
             else:
-                if el in conditionals.keys():
+                if el in list(conditionals.keys()):
                     result = get_results(conditionals[el])
                     if result is None:
                         return Symbol('$Failed')
-                    if len(result.keys()) == 1 and result.keys()[0] == el:
-                        return result.values()[0]
-                elif el in posts.keys():
+                    if len(list(result.keys())) == 1 and list(result.keys())[0] == el:
+                        return list(result.values())[0]
+                elif el in list(posts.keys()):
                     # TODO: allow use of conditionals
                     result = get_results(posts[el])
                     if result is None:
@@ -408,7 +410,7 @@ class Import(Builtin):
                         defaults = get_results(default_function)
                         if defaults is None:
                             return Symbol('$Failed')
-                    if el in defaults.keys():
+                    if el in list(defaults.keys()):
                         return defaults[el]
                     else:
                         evaluation.message('Import', 'noelem', from_python(el),
@@ -571,7 +573,7 @@ class Export(Builtin):
 
     def _check_filename(self, filename, evaluation):
         path = filename.to_python()
-        if isinstance(path, basestring) and path[0] == path[-1] == '"':
+        if isinstance(path, six.string_types) and path[0] == path[-1] == '"':
             return True
         evaluation.message('Export', 'chtype', filename)
         return False

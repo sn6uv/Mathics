@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from mathics.core.expression import Expression, Symbol, strip_context
 # from mathics.core.util import subsets, subranges, permutations
 from mathics.core.pattern import Pattern, StopGenerator
@@ -85,7 +86,7 @@ class BaseRule(object):
         try:
             self.pattern.match(
                 yield_match, expression, {}, evaluation, fully=fully)
-        except StopGenerator_BaseRule, exc:
+        except StopGenerator_BaseRule as exc:
             return exc.value
 
         if return_list:
@@ -140,7 +141,7 @@ class BuiltinRule(BaseRule):
         odict = self.__dict__.copy()
         del odict['function']
         odict['function_'] = (
-            self.function.im_self.get_name(), self.function.__name__)
+            self.function.__self__.get_name(), self.function.__name__)
         return odict
 
     def __setstate__(self, dict):

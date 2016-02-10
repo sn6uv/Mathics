@@ -33,6 +33,7 @@ Options using 'OptionsPattern' and 'OptionValue':
 The attributes 'Flat', 'Orderless', and 'OneIdentity' affect pattern matching.
 """
 
+from __future__ import absolute_import
 from mathics.builtin.base import Builtin, BinaryOperator, PostfixOperator
 from mathics.builtin.base import PatternObject
 
@@ -40,6 +41,7 @@ from mathics.core.expression import (
     Symbol, Expression, Number, Integer, Rational, Real)
 from mathics.core.rules import Rule
 from mathics.core.pattern import Pattern, StopGenerator
+from six.moves import range
 
 
 class Rule_(BinaryOperator):
@@ -663,7 +665,7 @@ def get_default_value(name, evaluation, k=None, n=None):
         pos.append(k)
     if n is not None:
         pos.append(n)
-    for pos_len in reversed(range(len(pos) + 1)):
+    for pos_len in reversed(list(range(len(pos) + 1))):
         # Try patterns from specific to general
         defaultexpr = Expression('Default', Symbol(name),
                                  *[Integer(index) for index in pos[:pos_len]])

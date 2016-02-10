@@ -5,11 +5,13 @@
 Tensor functions
 """
 
+from __future__ import absolute_import
 from mathics.builtin.base import Builtin, BinaryOperator
 from mathics.core.expression import Expression, Symbol, Integer
 from mathics.core.rules import Pattern
 
 from mathics.builtin.lists import get_part
+from six.moves import range
 
 
 class ArrayQ(Builtin):
@@ -223,13 +225,13 @@ class Inner(Builtin):
             evaluation.check_stopped()
             if i_rest:
                 new = Expression(head)
-                for i in xrange(1, i_rest[0] + 1):
+                for i in range(1, i_rest[0] + 1):
                     new.leaves.append(
                         rec(i_cur + [i], j_cur, i_rest[1:], j_rest))
                 return new
             elif j_rest:
                 new = Expression(head)
-                for j in xrange(1, j_rest[0] + 1):
+                for j in range(1, j_rest[0] + 1):
                     new.leaves.append(
                         rec(i_cur, j_cur + [j], i_rest, j_rest[1:]))
                 return new
@@ -238,7 +240,7 @@ class Inner(Builtin):
                     return Expression(f, get_part(list1, i_cur + [i]),
                                       get_part(list2, [i] + j_cur))
                 part = Expression(
-                    g, *[summand(i) for i in xrange(1, inner_dim + 1)])
+                    g, *[summand(i) for i in range(1, inner_dim + 1)])
                 # cur_expr.leaves.append(part)
                 return part
 

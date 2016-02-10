@@ -9,6 +9,7 @@ Precision is not "guarded" through the evaluation process. Only integer precisio
 However, things like 'N[Pi, 100]' should work as expected.
 """
 
+from __future__ import absolute_import
 import sympy
 import mpmath
 
@@ -19,6 +20,7 @@ from mathics.core.expression import (Integer, Rational, Real, Complex,
                                      Expression, Number, Symbol, from_python)
 from mathics.core.convert import from_sympy
 from mathics.settings import MACHINE_PRECISION
+from six.moves import range
 
 machine_precision = MACHINE_PRECISION
 
@@ -147,14 +149,14 @@ class N(Builtin):
                 if 'System`NHoldAll' in attributes:
                     eval_range = []
                 elif 'System`NHoldFirst' in attributes:
-                    eval_range = range(1, len(expr.leaves))
+                    eval_range = list(range(1, len(expr.leaves)))
                 elif 'System`NHoldRest' in attributes:
                     if len(expr.leaves) > 0:
                         eval_range = (0,)
                     else:
                         eval_range = ()
                 else:
-                    eval_range = range(len(expr.leaves))
+                    eval_range = list(range(len(expr.leaves)))
                 head = Expression('N', expr.head, prec).evaluate(evaluation)
                 leaves = expr.leaves[:]
                 for index in eval_range:

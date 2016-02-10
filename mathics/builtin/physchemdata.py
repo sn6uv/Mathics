@@ -5,12 +5,14 @@
 Physical and Chemical data
 """
 
+from __future__ import absolute_import
 from csv import reader as csvreader
 
 from mathics.builtin.base import Builtin
 from mathics.core.expression import (Expression, from_python, Symbol, String,
                                      strip_context)
 from mathics.settings import ROOT_DIR
+import six
 
 
 def load_element_data():
@@ -124,14 +126,14 @@ class ElementData(Builtin):
             if not 1 <= py_n <= 118:
                 evaluation.message("ElementData", "noent", n)
                 return
-        elif isinstance(py_n, unicode):
+        elif isinstance(py_n, six.text_type):
             pass
         else:
             evaluation.message("ElementData", "noent", n)
             return
 
         # Check property specifier
-        if isinstance(py_prop, str) or isinstance(py_prop, unicode):
+        if isinstance(py_prop, str) or isinstance(py_prop, six.text_type):
             py_prop = str(py_prop)
 
         if py_prop == '"Properties"':

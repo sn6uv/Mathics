@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+from __future__ import absolute_import
 import sys
 import re
 import pickle
@@ -17,6 +18,8 @@ from mathics.doc import documentation
 from mathics import get_version_string
 
 from mathics import settings
+import six
+from six.moves import zip
 
 definitions = Definitions(add_builtin=True)
 
@@ -72,7 +75,7 @@ def test_case(test, tests, index=0, quiet=False):
         fail_msg = "Result: %s\nWanted: %s" % (result, wanted)
         if out:
             fail_msg += "\nAdditional output:\n"
-            fail_msg += u'\n'.join(unicode(o) for o in out)
+            fail_msg += u'\n'.join(six.text_type(o) for o in out)
         return fail(fail_msg)
     output_ok = True
     if len(out) != len(wanted_out):
@@ -84,8 +87,8 @@ def test_case(test, tests, index=0, quiet=False):
                 break
     if not output_ok:
         return fail(u"Output:\n%s\nWanted:\n%s" % (
-            u'\n'.join(unicode(o) for o in out),
-            u'\n'.join(unicode(o) for o in wanted_out)))
+            u'\n'.join(six.text_type(o) for o in out),
+            u'\n'.join(six.text_type(o) for o in wanted_out)))
     return True
 
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import ply.lex as lex
 import ply.yacc as yacc
 
@@ -14,6 +15,7 @@ from mathics.core.numbers import dps
 from mathics.core.characters import letters, letterlikes, named_characters
 
 from mathics.builtin.numeric import machine_precision
+import six
 
 
 class TranslateError(Exception):
@@ -166,9 +168,9 @@ innequality_operators = {
     'LessEqual': ['op_LessEqual', 'LessEqual', 'LessSlantEqual'],
 }
 
-all_operator_names = (prefix_operators.keys() + infix_operators.keys() +
-                      flat_infix_operators.keys() + postfix_operators.keys() +
-                      innequality_operators.keys())
+all_operator_names = (list(prefix_operators.keys()) + list(infix_operators.keys()) +
+                      list(flat_infix_operators.keys()) + list(postfix_operators.keys()) +
+                      list(innequality_operators.keys()))
 
 precedence = (
     ('right', 'FormBox'),
@@ -1505,7 +1507,7 @@ class SystemDefinitions(object):
     System`.
     """
     def lookup_name(self, name):
-        assert isinstance(name, basestring)
+        assert isinstance(name, six.string_types)
         return ensure_context(name)
 
 

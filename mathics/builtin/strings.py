@@ -5,9 +5,12 @@
 String functions
 """
 
+from __future__ import absolute_import
 from mathics.builtin.base import BinaryOperator, Builtin, Test
 from mathics.core.expression import (Expression, Symbol, String, Integer,
                                      from_python)
+import six
+from six.moves import range
 
 
 class StringJoin(BinaryOperator):
@@ -90,7 +93,7 @@ class StringSplit(Builtin):
 
         for py_sep in py_seps:
             result = [t for s in result for t in s.split(py_sep)]
-        return from_python(filter(lambda x: x != u'', result))
+        return from_python([x for x in result if x != u''])
 
     def apply_single(self, string, sep, evaluation):
         'StringSplit[string_String, sep_?NotListQ]'
@@ -104,7 +107,7 @@ class StringSplit(Builtin):
         'StringSplit[string_String]'
         py_string = string.get_string_value()
         result = py_string.split()
-        return from_python(filter(lambda x: x != u'', result))
+        return from_python([x for x in result if x != u''])
 
     def apply_strse1(self, x, evaluation):
         'StringSplit[x_/;Not[StringQ[x]]]'
@@ -349,7 +352,7 @@ class CharacterRange(Builtin):
         start = ord(start.value[0])
         stop = ord(stop.value[0])
         return Expression('List', *[
-            String(unichr(code)) for code in xrange(start, stop + 1)])
+            String(unichr(code)) for code in range(start, stop + 1)])
 
 
 class String_(Builtin):
@@ -555,7 +558,7 @@ class ToCharacterCode(Builtin):
 
         if isinstance(string, list):
             codes = [[ord(char) for char in substring] for substring in string]
-        elif isinstance(string, basestring):
+        elif isinstance(string, six.string_types):
             codes = [ord(char) for char in string]
         return from_python(codes)
 

@@ -5,11 +5,15 @@
 Linear algebra
 """
 
+from __future__ import absolute_import
 import sympy
 
 from mathics.builtin.base import Builtin
 from mathics.core.convert import from_sympy
 from mathics.core.expression import Expression, Integer, Complex, Symbol, Real
+import six
+from six.moves import range
+from six.moves import zip
 
 
 def matrix_data(m):
@@ -338,13 +342,13 @@ class Eigenvalues(Builtin):
             return evaluation.message('Eigenvalues', 'matsq', m)
         eigenvalues = matrix.eigenvals()
         try:
-            eigenvalues = sorted(eigenvalues.iteritems(),
-                                 key=lambda (v, c): (abs(v), -v), reverse=True)
+            eigenvalues = sorted(six.iteritems(eigenvalues),
+                                 key=lambda v_c: (abs(v_c[0]), -v_c[0]), reverse=True)
         except TypeError as e:
             if not str(e).startswith('cannot determine truth value of'):
                 raise e
-            eigenvalues = eigenvalues.items()
-        return from_sympy([v for (v, c) in eigenvalues for _ in xrange(c)])
+            eigenvalues = list(eigenvalues.items())
+        return from_sympy([v for (v, c) in eigenvalues for _ in range(c)])
 
 
 class Eigensystem(Builtin):
@@ -599,8 +603,7 @@ class Eigenvectors(Builtin):
                 'Eigenvectors', 'eigenvecnotimplemented', m)
 
         # The eigenvectors are given in the same order as the eigenvalues.
-        eigenvects = sorted(eigenvects, key=lambda (
-            val, c, vect): (abs(val), -val), reverse=True)
+        eigenvects = sorted(eigenvects, key=lambda val_c_vect: (abs(val_c_vect[0]), -val_c_vect[0]), reverse=True)
         result = []
         for val, count, basis in eigenvects:
             # Select the i'th basis vector, convert matrix to vector,

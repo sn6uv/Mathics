@@ -5,6 +5,7 @@
 Control statements
 """
 
+from __future__ import absolute_import
 from mathics.builtin.base import Builtin, BinaryOperator
 from mathics.core.expression import Expression, Symbol, from_python
 from mathics.core.evaluation import (
@@ -12,6 +13,8 @@ from mathics.core.evaluation import (
 
 from mathics.builtin.lists import _IterationFunction
 from mathics.builtin.patterns import match
+from six.moves import range
+from six.moves import zip
 
 
 class CompoundExpression(BinaryOperator):

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from mathics.builtin.base import Builtin, Predefined
 from mathics.core.expression import (Expression, String, Symbol, Integer,
                                      fully_qualified_symbol_name)

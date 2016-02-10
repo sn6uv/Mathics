@@ -5,8 +5,10 @@
 Functional programming
 """
 
+from __future__ import absolute_import
 from mathics.builtin.base import Builtin, PostfixOperator
 from mathics.core.expression import Expression
+from six.moves import zip
 
 
 class Function(PostfixOperator):
@@ -80,8 +82,8 @@ class Function(PostfixOperator):
         if len(vars) > len(args):
             evaluation.message('Function', 'fpct', )
         else:
-            vars = dict(zip((
-                var.get_name() for var in vars), args[:len(vars)]))
+            vars = dict(list(zip((
+                var.get_name() for var in vars), args[:len(vars)])))
             return body.replace_vars(vars)
 
 

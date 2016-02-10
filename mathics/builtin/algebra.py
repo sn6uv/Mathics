@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from mathics.builtin.base import Builtin
 from mathics.core.expression import Expression, Integer
 from mathics.core.convert import from_sympy
 
 import sympy
 import mpmath
+from six.moves import range
 
 
 def sympy_factor(expr_sympy):

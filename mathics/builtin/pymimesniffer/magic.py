@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import print_function
 import sys
 import os.path
 import logging
+import six
+from six.moves import range
 
 
 class MagicRule(object):
@@ -27,7 +31,7 @@ class MagicDetector(object):
     def match(self, filename, data=None):
         if not data:
             file = open(filename, 'r')
-        elif isinstance(data, str) or isinstance(data, unicode):
+        elif isinstance(data, str) or isinstance(data, six.text_type):
             from StringIO import StringIO
 
             file = StringIO(data)
@@ -49,7 +53,7 @@ class MagicDetector(object):
 
         for mimetype, rules in self.mimetypes.items():
             for rule in rules:
-                if rule.parentType and rule.parentType not in matches.keys():
+                if rule.parentType and rule.parentType not in list(matches.keys()):
                     continue
 
                 if rule.extensions and ext not in rule.extensions:
@@ -71,7 +75,7 @@ class MagicDetector(object):
                         matches[mimetype] = rule
                         break
 
-        return matches.keys()
+        return list(matches.keys())
 
 
 class MagicLoader(object):
@@ -174,7 +178,7 @@ class TestDetector(unittest.TestCase):
         self.assertEquals([], self.detector.match('test.gz1', '\x1f\x8b\x08test'))
         self.assertEquals([], self.detector.match('test.gz', '\x1f \x8b\x08test'))
 
-        padding = ''.join([' ' for _ in xrange(257)])
+        padding = ''.join([' ' for _ in range(257)])
 
         self.assertEquals(['application/x-tar'], self.detector.match('test.tar', padding + 'ustartest'))
         self.assertEquals([], self.detector.match('test.tar1', padding + 'ustartest'))
@@ -202,9 +206,9 @@ def dump(mimetypes):
         print(type)
 
         for rule in rules:
-            print("\textenions = %s" % rule.extensions)
-            print("\tmagic num = %s" % rule.magicNumbers)
-            print("\tmagic str = %s" % rule.magicStrings)
+            print(("\textenions = %s" % rule.extensions))
+            print(("\tmagic num = %s" % rule.magicNumbers))
+            print(("\tmagic str = %s" % rule.magicStrings))
 
 if __name__ == '__main__':
     logging.basicConfig(

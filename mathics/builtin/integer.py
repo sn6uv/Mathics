@@ -5,6 +5,7 @@
 Integer functions
 """
 
+from __future__ import absolute_import
 import sympy
 
 from mathics.builtin.base import Builtin, SympyObject, SympyFunction

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import sys
 import random
 import unittest
@@ -7,6 +8,7 @@ from mathics.core.parser import parse, ParseError, ScanError
 from mathics.core.expression import (Expression, Real, Integer, String,
                                      Rational, Symbol)
 from mathics.core.definitions import Definitions
+import six
 
 
 definitions = None
@@ -26,9 +28,9 @@ def parse(s):
 
 class ParserTests(unittest.TestCase):
     def check(self, expr1, expr2):
-        if isinstance(expr1, basestring):
+        if isinstance(expr1, six.string_types):
             expr1 = parse(expr1)
-        if isinstance(expr2, basestring):
+        if isinstance(expr2, six.string_types):
             expr2 = parse(expr2)
 
         self.assertTrue(expr1.same(expr2))

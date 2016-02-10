@@ -3,12 +3,14 @@
 
 from __future__ import print_function
 
+from __future__ import absolute_import
 import sys
-import cPickle as pickle
+import six.moves.cPickle as pickle
 import interruptingcow
 
 from mathics import settings
 from mathics.core.expression import ensure_context
+import six
 
 FORMATS = ['StandardForm', 'FullForm', 'TraditionalForm',
            'OutputForm', 'InputForm',
@@ -199,7 +201,7 @@ class Evaluation(object):
                     else:
                         raise
                 except ValueError as exc:
-                    text = unicode(exc)
+                    text = six.text_type(exc)
                     if (text == 'mpz.pow outrageous exponent' or    # noqa
                         text == 'mpq.pow outrageous exp num'):
                         self.message('General', 'ovfl')
@@ -246,7 +248,7 @@ class Evaluation(object):
         if last_parse_error is not None:
             self.recursion_depth = 0
             self.stopped = False
-            self.message('General', 'syntax', unicode(last_parse_error))
+            self.message('General', 'syntax', six.text_type(last_parse_error))
             self.results.append(Result(self.out, None, None))
 
     def get_stored_result(self, result):

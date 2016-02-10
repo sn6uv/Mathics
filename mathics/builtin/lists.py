@@ -5,6 +5,7 @@
 List functions
 """
 
+from __future__ import absolute_import
 from mathics.builtin.base import (
     Builtin, Test, InvalidLevelspecError,
     PartError, PartDepthError, PartRangeError, Predefined, SympyFunction)
@@ -16,6 +17,8 @@ from mathics.core.convert import from_sympy
 from mathics.builtin.algebra import cancel
 
 import sympy
+from six.moves import range
+from six.moves import zip
 
 
 class List(Builtin):
@@ -710,8 +713,7 @@ class Partition(Builtin):
 
     def chunks(self, l, n, d):
         assert n > 0 and d > 0
-        return filter(lambda x: len(x) == n,
-                      map(lambda i: l[i:i + n], xrange(0, len(l), d)))
+        return [x for x in [l[i:i + n] for i in range(0, len(l), d)] if len(x) == n]
 
     def apply_no_overlap(self, l, n, evaluation):
         'Partition[l_List, n_Integer]'
@@ -1440,7 +1442,7 @@ class Array(Builtin):
                 return
             origins[index] = value
 
-        dims = zip(dims, origins)
+        dims = list(zip(dims, origins))
 
         def rec(rest_dims, current):
             evaluation.check_stopped()

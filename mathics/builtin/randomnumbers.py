@@ -7,14 +7,16 @@ Random number generation
 Random numbers are generated using the Mersenne Twister.
 """
 
+from __future__ import absolute_import
 import random
-import cPickle as pickle
+import six.moves.cPickle as pickle
 import binascii
 import hashlib
 
 from mathics.builtin.base import Builtin
 from mathics.core.expression import (Integer, String, Symbol, Real, Expression,
                                      Complex)
+from six.moves import range
 
 
 def get_random_state():
@@ -223,10 +225,10 @@ class RandomInteger(Builtin):
                 if i == len(result) - 1:
                         return Expression('List', *[
                             Integer(rand.randint(rmin, rmax))
-                            for j in xrange(result[i])])
+                            for j in range(result[i])])
                 else:
                     return Expression('List', *[
-                        search_product(i + 1) for j in xrange(result[i])])
+                        search_product(i + 1) for j in range(result[i])])
             return search_product(0)
 
 
@@ -314,10 +316,10 @@ class RandomReal(Builtin):
                 if i == len(result) - 1:
                         return Expression('List', *[
                             Real(rand.randreal(min_value, max_value))
-                            for j in xrange(result[i])])
+                            for j in range(result[i])])
                 else:
                     return Expression('List', *[
-                        search_product(i + 1) for j in xrange(result[i])])
+                        search_product(i + 1) for j in range(result[i])])
             return search_product(0)
 
 
@@ -415,8 +417,8 @@ class RandomComplex(Builtin):
                             Complex(
                                 rand.randreal(min_value.real, max_value.real),
                                 rand.randreal(min_value.imag, max_value.imag)
-                            ) for j in xrange(py_ns[i])])
+                            ) for j in range(py_ns[i])])
                 else:
                     return Expression('List', *[
-                        search_product(i + 1) for j in xrange(py_ns[i])])
+                        search_product(i + 1) for j in range(py_ns[i])])
             return search_product(0)

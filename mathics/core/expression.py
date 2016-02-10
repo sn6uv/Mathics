@@ -1,16 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 import sympy
 import mpmath
 import re
 
 from mathics.core.numbers import get_type, dps, prec, min_prec
 from mathics.core.convert import sympy_symbol_prefix, SympyExpression
+import six
+from six.moves import map
+from six.moves import range
+from six.moves import zip
 
 
 def fully_qualified_symbol_name(name):
-    return (isinstance(name, basestring)
+    return (isinstance(name, six.string_types)
             and '`' in name
             and not name.startswith('`')
             and not name.endswith('`')
@@ -18,14 +23,14 @@ def fully_qualified_symbol_name(name):
 
 
 def valid_context_name(ctx, allow_initial_backquote=False):
-    return (isinstance(ctx, basestring)
+    return (isinstance(ctx, six.string_types)
             and ctx.endswith('`')
             and '``' not in ctx
             and (allow_initial_backquote or not ctx.startswith('`')))
 
 
 def ensure_context(name):
-    assert isinstance(name, basestring)
+    assert isinstance(name, six.string_types)
     assert name != ''
     if '`' in name:
         # Symbol has a context mark -> it came from the parser
@@ -49,7 +54,7 @@ def system_symbols(*symbols):
 
 # system_symbols_dict({'SomeSymbol': ...}) -> {'System`SomeSymbol': ...}
 def system_symbols_dict(d):
-    return {ensure_context(k): v for k, v in d.iteritems()}
+    return {ensure_context(k): v for k, v in six.iteritems(d)}
 
 
 class BoxError(Exception):
@@ -82,7 +87,7 @@ class ExpressionPointer(object):
 
 def from_python(arg):
     number_type = get_type(arg)
-    if isinstance(arg, (int, long)) or number_type == 'z':
+    if isinstance(arg, six.integer_types) or number_type == 'z':
         return Integer(arg)
     elif isinstance(arg, float) or number_type == 'f':
         return Real(arg)
@@ -90,7 +95,7 @@ def from_python(arg):
         return Rational(arg)
     elif isinstance(arg, complex) or number_type == 'c':
         return Complex(arg.real, arg.imag)
-    elif isinstance(arg, basestring):
+    elif isinstance(arg, six.string_types):
         return String(arg)
         # if arg[0] == arg[-1] == '"':
         #     return String(arg[1:-1])
@@ -178,7 +183,7 @@ class BaseExpression(object):
         as in Expression.get_pre_choices
         """
 
-        return hash(unicode(self))
+        return hash(six.text_type(self))
 
     def __cmp__(self, other):
         if not hasattr(other, 'get_sort_key'):
@@ -384,8 +389,8 @@ class Monomial(object):
                 other_exps[var] -= dec
                 if not other_exps[var]:
                     del other_exps[var]
-        self_exps = sorted((var, exp) for var, exp in self_exps.iteritems())
-        other_exps = sorted((var, exp) for var, exp in other_exps.iteritems())
+        self_exps = sorted((var, exp) for var, exp in six.iteritems(self_exps))
+        other_exps = sorted((var, exp) for var, exp in six.iteritems(other_exps))
 
         index = 0
         self_len = len(self_exps)
@@ -416,7 +421,7 @@ class Monomial(object):
 class Expression(BaseExpression):
     def __init__(self, head, *leaves, **kwargs):
         super(Expression, self).__init__(**kwargs)
-        if isinstance(head, basestring):
+        if isinstance(head, six.string_types):
             head = Symbol(head)
         self.head = head
         self.leaves = [from_python(leaf) for leaf in leaves]
@@ -688,14 +693,14 @@ class Expression(BaseExpression):
                     'System`HoldAllComplete' in attributes):
                 eval_range = []
             elif 'System`HoldFirst' in attributes:
-                eval_range = range(1, len(leaves))
+                eval_range = list(range(1, len(leaves)))
             elif 'System`HoldRest' in attributes:
                 if len(leaves) > 0:
                     eval_range = [0]
                 else:
                     eval_range = []
             else:
-                eval_range = range(len(leaves))
+                eval_range = list(range(len(leaves)))
 
             if 'System`HoldAllComplete' not in attributes:
                 for index, leaf in enumerate(self.leaves):
@@ -784,7 +789,7 @@ class Expression(BaseExpression):
 
     def __str__(self):
         return u'%s[%s]' % (
-            self.head, u', '.join([unicode(leaf) for leaf in self.leaves]))
+            self.head, u', '.join([six.text_type(leaf) for leaf in self.leaves]))
 
     def __repr__(self):
         # This .encode("unicode_escape") is necessary because Python
@@ -1025,7 +1030,7 @@ class Expression(BaseExpression):
                 """for var in new_vars:
                     if var in scoping_vars:
                         del new_vars[var]"""
-                vars = {var: value for var, value in vars.iteritems()
+                vars = {var: value for var, value in six.iteritems(vars)
                         if var not in scoping_vars}
 
         leaves = self.leaves
@@ -1209,7 +1214,7 @@ class Atom(BaseExpression):
 class Symbol(Atom):
     def __init__(self, name, sympy_dummy=None, **kwargs):
         super(Symbol, self).__init__(**kwargs)
-        assert isinstance(name, basestring)
+        assert isinstance(name, six.string_types)
         self.name = ensure_context(name)
         self.sympy_dummy = sympy_dummy
 
@@ -1333,7 +1338,7 @@ class Number(Atom):
             real, imag = value.as_real_imag()
             return Complex(real, imag, prec)
 
-        if isinstance(value, (int, long)):
+        if isinstance(value, six.integer_types):
             return Integer(value)
         elif isinstance(value, float):
             return Real(value)
@@ -1487,7 +1492,7 @@ class Real(Number):
         from mathics.builtin.numeric import machine_precision
         super(Real, self).__init__()
 
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             value = str(value)
             if p is None:
                 digits = (''.join(re.findall('[0-9]+', value))).lstrip('0')
@@ -1537,7 +1542,7 @@ class Real(Number):
         else:
             s = str(self.to_sympy())
             if 'e' in s:
-                base, exp = map(str, s.split('e'))
+                base, exp = list(map(str, s.split('e')))
             else:
                 if self.to_sympy() < 0:
                     prefix = '-'
@@ -1611,7 +1616,7 @@ class Complex(Number):
     def __init__(self, real, imag, p=None, **kwargs):
         super(Complex, self).__init__(**kwargs)
 
-        if isinstance(real, basestring):
+        if isinstance(real, six.string_types):
             real = str(real)
             if '.' in real:
                 self.real = Real(real, p)
@@ -1622,7 +1627,7 @@ class Complex(Number):
         else:
             self.real = Number.from_mp(real)
 
-        if isinstance(imag, basestring):
+        if isinstance(imag, six.string_types):
             imag = str(imag)
             if '.' in imag:
                 self.imag = Real(imag, p)
@@ -1766,7 +1771,7 @@ class String(Atom):
         from mathics.builtin import builtins
 
         operators = set()
-        for name, builtin in builtins.iteritems():
+        for name, builtin in six.iteritems(builtins):
             operator = builtin.get_operator_display()
             if operator is not None:
                 operators.add(operator)
@@ -1800,7 +1805,7 @@ class String(Atom):
         from mathics.builtin import builtins
 
         operators = set()
-        for name, builtin in builtins.iteritems():
+        for name, builtin in six.iteritems(builtins):
             operator = builtin.get_operator_display()
             if operator is not None:
                 operators.add(operator)
@@ -1880,7 +1885,7 @@ def get_default_value(name, evaluation, k=None, n=None):
         pos.append(k)
     if n is not None:
         pos.append(n)
-    for pos_len in reversed(range(len(pos) + 1)):
+    for pos_len in reversed(list(range(len(pos) + 1))):
         # Try patterns from specific to general
         defaultexpr = Expression('Default', Symbol(name),
                                  *[Integer(index) for index in pos[:pos_len]])

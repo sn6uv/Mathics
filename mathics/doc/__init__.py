@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from doc import Documentation
+from __future__ import absolute_import
+from .doc import Documentation
 
 documentation = Documentation()

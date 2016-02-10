@@ -5,6 +5,7 @@
 Recurrence relation solvers
 """
 
+from __future__ import absolute_import
 import sympy
 from mathics.builtin.base import Builtin
 from mathics.core.expression import Expression
