@@ -4,6 +4,7 @@ python:
   - 3.2
   - 3.3
   - 3.4
+  - 3.5
   - pypy
   - pypy3
 env:
@@ -22,6 +23,8 @@ matrix:
           - SYMPY_SRC=sympy-0.7.6
           - CYTHON="true"
     allow_failures:
+      - python: 3.2
+      - python: 3.3
       - env: SYMPY_SRC=sympy-0.7.5
       - env: SYMPY_SRC=master
       - env:
