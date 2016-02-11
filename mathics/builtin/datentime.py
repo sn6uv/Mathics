@@ -203,7 +203,7 @@ class _DateFormat(Builtin):
                 all(isinstance(s, basestring) for s in etime[1])):
                 is_spec = [str(s).strip(
                     '"') in DATE_STRING_FORMATS.keys() for s in etime[1]]
-                etime[1] = map(lambda s: str(s).strip('"'), etime[1])
+                etime[1] = [str(s).strip('"') for s in etime[1]]
 
                 if sum(is_spec) == len(is_spec):
                     forms = []
@@ -412,7 +412,7 @@ class DateString(_DateFormat):
         if not isinstance(pyform, list):
             pyform = [pyform]
 
-        pyform = map(lambda x: x.strip('"'), pyform)
+        pyform = [x.strip('"') for x in pyform]
 
         if not all(isinstance(f, basestring) for f in pyform):
             evaluation.message('DateString', 'fmt', form)
@@ -426,11 +426,9 @@ class DateString(_DateFormat):
                 if str(p).endswith("Short") and str(p) != "YearShort":
                     if str(p) == "DateTimeShort":
                         tmp = tmp.split(' ')
-                        tmp = ' '.join(map(lambda s: s.lstrip(
-                            '0'), tmp[:-1]) + [tmp[-1]])
+                        tmp = ' '.join([s.lstrip('0') for s in tmp[:-1]] + [tmp[-1]])
                     else:
-                        tmp = ' '.join(map(lambda s: s.lstrip(
-                            '0'), tmp.split(' ')))
+                        tmp = ' '.join([s.lstrip('0') for s in tmp.split(' ')])
             else:
                 tmp = str(p)
 
@@ -666,7 +664,7 @@ class DatePlus(Builtin):
             pyoff = [pyoff]
 
         # Strip " marks
-        pyoff = map(lambda x: [x[0], x[1].strip('"')], pyoff)
+        pyoff = [[x[0], x[1].strip('"')] for x in pyoff]
 
         if isinstance(pyoff, list) and all(     # noqa
             len(o) == 2 and o[1] in TIME_INCREMENTS.keys() and
@@ -773,7 +771,7 @@ class DateDifference(Builtin):
             pyunits = [unicode(pyunits.strip('"'))]
         elif (isinstance(pyunits, list) and
               all(isinstance(p, basestring) for p in pyunits)):
-            pyunits = map(lambda p: p.strip('"'), pyunits)
+            pyunits = [p.strip('"') for p in pyunits]
 
         if not all(p in TIME_INCREMENTS.keys() for p in pyunits):
             evaluation.message('DateDifference', 'inc', units)
