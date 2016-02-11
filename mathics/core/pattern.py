@@ -3,6 +3,7 @@
 # cython: profile=False
 
 from __future__ import unicode_literals
+from __future__ import absolute_import
 
 from mathics.core.expression import (Expression, system_symbols,
                                      ensure_context)
@@ -73,7 +74,7 @@ class Pattern(object):
             raise StopGenerator_Pattern(True)
         try:
             self.match(yield_match, expression, vars, evaluation, fully=fully)
-        except StopGenerator_Pattern, exc:
+        except StopGenerator_Pattern as exc:
             return exc.value
         return False
 

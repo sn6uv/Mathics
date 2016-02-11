@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+from __future__ import absolute_import
 
 from mathics.core.expression import Expression, Symbol, strip_context, KeyComparable
 # from mathics.core.util import subsets, subranges, permutations
@@ -87,7 +88,7 @@ class BaseRule(KeyComparable):
         try:
             self.pattern.match(
                 yield_match, expression, {}, evaluation, fully=fully)
-        except StopGenerator_BaseRule, exc:
+        except StopGenerator_BaseRule as exc:
             return exc.value
 
         if return_list:
