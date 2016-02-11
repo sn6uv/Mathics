@@ -223,7 +223,7 @@ def escape_latex(text):
         if tag == 'em':
             return r'\emph{%s}' % content
         elif tag == 'url':
-            return r'\url{%s}' % content
+            return '\\url{%s}' % content
 
     text = QUOTATIONS_RE.sub(repl_quotation, text)
     text = HYPERTEXT_RE.sub(repl_hypertext, text)
