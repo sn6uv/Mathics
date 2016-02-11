@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
 from __future__ import print_function
 
 import sys
@@ -72,7 +73,7 @@ class Message(Out):
             'message': True,
             'symbol': self.symbol,
             'tag': self.tag,
-            'prefix': u'%s::%s' % (self.symbol, self.tag),
+            'prefix': '%s::%s' % (self.symbol, self.tag),
             'text': self.text,
         }
 

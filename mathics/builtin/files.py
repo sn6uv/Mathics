@@ -796,7 +796,7 @@ class Write(Builtin):
 
         evaluation.format = 'text'
         text = evaluation.format_output(from_python(expr))
-        stream.write(unicode(text) + u'\n')
+        stream.write(unicode(text) + '\n')
         return Symbol('Null')
 
 
@@ -1889,7 +1889,7 @@ class WriteString(Builtin):
                     Expression('FullForm', result).evaluate(evaluation))
             exprs.append(result)
 
-        stream.write(u''.join(exprs))
+        stream.write(''.join(exprs))
         try:
             stream.flush()
         except IOError as err:
@@ -2226,7 +2226,7 @@ class Put(BinaryOperator):
 
         text = [evaluation.format_output(Expression(
             'InputForm', expr)) for expr in exprs.get_sequence()]
-        text = u'\n'.join(text) + u'\n'
+        text = '\n'.join(text) + '\n'
         text.encode('utf-8')
 
         stream.write(text)
@@ -2315,7 +2315,7 @@ class PutAppend(BinaryOperator):
 
         text = [unicode(e.do_format(evaluation, 'System`OutputForm').__str__())
                 for e in exprs.get_sequence()]
-        text = u'\n'.join(text) + u'\n'
+        text = '\n'.join(text) + '\n'
         text.encode('ascii')
 
         stream.write(text)
