@@ -282,7 +282,7 @@ class IntegerExponent(Builtin):
         py_n, py_b = n.to_python(), b.to_python()
         expr = Expression('IntegerExponent', n, b)
 
-        if not (isinstance(py_n, int) or isinstance(py_n, long)):
+        if not isinstance(py_n, (int, long)):
             evaluation.message('IntegerExponent', 'int', expr)
         py_n = abs(py_n)
 

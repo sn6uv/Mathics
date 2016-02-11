@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 from __future__ import print_function
+from __future__ import absolute_import
 
 """
 File Operations
@@ -27,6 +28,11 @@ from mathics.core.expression import (Expression, Real, Complex, String, Symbol,
 from mathics.builtin.base import (Builtin, Predefined, BinaryOperator,
                                   PrefixOperator)
 from mathics.settings import ROOT_DIR
+
+try:
+    unichr
+except NameError:   # Py3
+    unichr = chr
 
 INITIAL_DIR = os.getcwd()
 HOME_DIR = os.path.expanduser('~')
@@ -694,7 +700,7 @@ class Read(Builtin):
                         raise EOFError
                     result.append(tmp)
                 elif typ == Symbol('Expression'):
-                    tmp = read_record.next()
+                    tmp = next(read_record)
                     try:
                         try:
                             expr = parse(tmp, evaluation.definitions)
@@ -709,7 +715,7 @@ class Read(Builtin):
                         return Symbol('$Failed')
                     result.append(tmp)
                 elif typ == Symbol('Number'):
-                    tmp = read_number.next()
+                    tmp = next(read_number)
                     try:
                         tmp = int(tmp)
                     except ValueError:
@@ -722,7 +728,7 @@ class Read(Builtin):
                     result.append(tmp)
 
                 elif typ == Symbol('Real'):
-                    tmp = read_real.next()
+                    tmp = next(read_real)
                     tmp = tmp.replace('*^', 'E')
                     try:
                         tmp = float(tmp)
@@ -732,14 +738,14 @@ class Read(Builtin):
                         return Symbol('$Failed')
                     result.append(tmp)
                 elif typ == Symbol('Record'):
-                    result.append(read_record.next())
+                    result.append(next(read_record))
                 elif typ == Symbol('String'):
                     tmp = stream.readline()
                     if len(tmp) == 0:
                         raise EOFError
                     result.append(tmp.rstrip('\n'))
                 elif typ == Symbol('Word'):
-                    result.append(read_word.next())
+                    result.append(next(read_word))
 
             except EOFError:
                 return Symbol('EndOfFile')

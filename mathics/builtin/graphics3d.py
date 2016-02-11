@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+from __future__ import absolute_import
 
 """
 Graphics (3D)
@@ -11,7 +12,7 @@ import numbers
 from mathics.core.expression import (Expression, NumberError, from_python,
                                      system_symbols_dict)
 from mathics.builtin.base import BoxConstructError, Builtin, InstancableBuiltin
-from graphics import (Graphics, GraphicsBox, PolygonBox, create_pens, _Color,
+from .graphics import (Graphics, GraphicsBox, PolygonBox, create_pens, _Color,
                       LineBox, PointBox, Style, RGBColor, get_class,
                       asy_number, CoordinatesError, _GraphicsElements)
 

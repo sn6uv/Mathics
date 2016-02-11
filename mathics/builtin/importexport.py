@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+from __future__ import absolute_import
 
 """
 Importing and Exporting
@@ -10,7 +11,7 @@ Importing and Exporting
 from mathics.core.expression import Expression, from_python
 from mathics.builtin.base import Builtin, Predefined, Symbol, String
 
-from pymimesniffer import magic
+from .pymimesniffer import magic
 import mimetypes
 
 

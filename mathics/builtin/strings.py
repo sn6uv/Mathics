@@ -11,6 +11,11 @@ from mathics.builtin.base import BinaryOperator, Builtin, Test
 from mathics.core.expression import (Expression, Symbol, String, Integer,
                                      from_python)
 
+try:
+    unichr
+except NameError:   # Py3
+    unichr = chr
+
 
 class StringJoin(BinaryOperator):
     """
