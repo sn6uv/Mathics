@@ -20,6 +20,7 @@ matrix:
           - SYMPY_SRC=sympy-0.7.6
           - TEST_DOC="true"
 before_install:
+  - pip install codecov
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
   - if [[ "$TEST_DOC" == "true" ]]; then
@@ -47,3 +48,5 @@ script:
     fi
 notifications:
     email: false
+after_success:
+  - codecov
