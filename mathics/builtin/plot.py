@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 from __future__ import absolute_import
+from six.moves import range
+from six.moves import zip
 
 """
 Plotting
@@ -363,7 +365,7 @@ class _Plot(Builtin):
             tmp_mesh_points = []  # For this function only
             continuous = False
             d = (stop - start) / (plotpoints - 1)
-            for i in xrange(plotpoints):
+            for i in range(plotpoints):
                 x_value = start + i * d
                 point = self.eval_f(f, x_name, x_value, evaluation)
                 if point is not None:

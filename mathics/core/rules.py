@@ -4,24 +4,10 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
+import six
+
 from mathics.core.expression import Expression, Symbol, strip_context, KeyComparable
-# from mathics.core.util import subsets, subranges, permutations
 from mathics.core.pattern import Pattern, StopGenerator
-
-"""_tagged_stop_generators = {}
-
-def StopGenerator(tag):
-    existing = _tagged_stop_generators.get(tag)
-    if existing is not None:
-        return existing
-
-    class TaggedStopGenerator(Exception):
-        def __init__(self, value=None):
-            self.value = value
-    TaggedStopGenerator.__name__ = 'TaggedStopGenerator_%s' % tag
-
-    _tagged_stop_generators[tag] = TaggedStopGenerator
-    return TaggedStopGenerator"""
 
 
 class StopGenerator_BaseRule(StopGenerator):
@@ -49,7 +35,7 @@ class BaseRule(KeyComparable):
                 # continue
                 return
             options = {}
-            for name, value in vars.items():
+            for name, value in list(vars.items()):
                 if name.startswith('_option_'):
                     options[name[len('_option_'):]] = value
                     del vars[name]
@@ -111,8 +97,7 @@ class Rule(BaseRule):
         return new
 
     def __repr__(self):
-        s = '<Rule: %s -> %s>' % (self.pattern, self.replace)
-        return s.encode('unicode_escape')
+        return '<Rule: %s -> %s>' % (self.pattern, self.replace)
 
 
 class BuiltinRule(BaseRule):
@@ -132,14 +117,13 @@ class BuiltinRule(BaseRule):
             return self.function(evaluation=evaluation, **vars_noctx)
 
     def __repr__(self):
-        s = '<BuiltinRule: %s -> %s>' % (self.pattern, self.function)
-        return s.encode('unicode_escape')
+        return '<BuiltinRule: %s -> %s>' % (self.pattern, self.function)
 
     def __getstate__(self):
         odict = self.__dict__.copy()
         del odict['function']
         odict['function_'] = (
-            self.function.im_self.get_name(), self.function.__name__)
+            self.function.__self__.get_name(), self.function.__name__)
         return odict
 
     def __setstate__(self, dict):
