@@ -1,47 +1,24 @@
+sudo: false
 language: python
 python:
   - 2.7
-  - 3.2
-  - 3.3
   - 3.4
   - 3.5
   - pypy
   - pypy3
 env:
-  - SYMPY_SRC=sympy-0.7.6
+  - SYMPY_SRC=sympy-0.7.6 CYTHON="true"
+  - SYMPY_SRC=sympy-0.7.6 CYTHON="false"
+  - SYMPY_SRC=sympy-0.7.5 CYTHON="false"
+  - SYMPY_SRC=master CYTHON="false"
 matrix:
-    fast_finish: true
-    include:
-      - python: 2.7
-        env: SYMPY_SRC=master
-      - python: 2.7
-        env: SYMPY_SRC=sympy-0.7.5
-      - python: 2.7
-        env:
-          - SYMPY_SRC=sympy-0.7.6
-          - TEST_DOC="true"
-      - python: 2.7
-        env:
-          - SYMPY_SRC=sympy-0.7.6
-          - CYTHON="true"
     allow_failures:
-      - python: 3.2
-      - python: 3.3
       - python: 3.4
       - python: 3.5
       - python: pypy3
-      - env: SYMPY_SRC=sympy-0.7.5
-      - env: SYMPY_SRC=master
-      - env:
-          - SYMPY_SRC=sympy-0.7.6
-          - TEST_DOC="true"
+      - env: SYMPY_SRC=sympy-0.7.5 CYTHON="false"
+      - env: SYMPY_SRC=master CYTHON="false"
 before_install:
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
-  - if [[ "$TEST_DOC" == "true" ]]; then
-      sudo apt-get update -qq &&
-      sudo apt-get install -qq asymptote imagemagick texlive-latex-extra texlive-latex3 texlive-fonts-recommended latexmk;
-    fi
   - if [[ "$CYTHON" == "true" ]]; then
       pip install cython;
     fi
@@ -50,18 +27,9 @@ before_install:
   - pip install git+https://github.com/sympy/sympy.git@$SYMPY_SRC
 install:
   - sed -i "s/'sympy==[0-9]\.[0-9]\.[0-9]', //" setup.py
-  - if [[ "$TEST_DOC" == "true" ]]; then python setup.py develop; else python setup.py install; fi
+  - python setup.py install
 script:
   - python setup.py test
-  - if [[ "$TEST_DOC" == "true" ]]; then
-      python mathics/test.py -o &&
-      python mathics/test.py -t &&
-      cd mathics/doc/ &&
-      ./images.sh &&
-      cd tex/ &&
-      make latex;
-    else
-      python mathics/test.py;
-    fi
+  - python mathics/test.py;
 notifications:
     email: false
