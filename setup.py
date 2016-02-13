@@ -172,17 +172,27 @@ setup(
         ],
     },
 
-    # don't pack Mathics in egg because of sqlite database, media files, etc.
+    # don't pack Mathics in egg because of media files, etc.
     zip_safe=False,
 
     # metadata for upload to PyPI
-    author="Jan Poeschko",
-    author_email="jan@poeschko.com",
+    author="Angus Griffith",
+    author_email="mathics@angusgriffith.com",
     description="A general-purpose computer algebra system.",
     license="GPL",
-    keywords="computer algebra system mathics mathematica sympy wolfram",
-    url="http://www.mathics.github.io/",   # project home page, if any
+    url="http://www.mathics.github.io/",
 
-    # TODO: could also include long_description, download_url, classifiers,
-    # etc.
+    keywords=['Mathematica', 'Wolfram', 'Interpreter', 'Shell', 'Math', 'CAS'],
+    classifiers=[
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 2 :: Only',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'Topic :: Scientific/Engineering :: Physics',
+    ],
+    # TODO: could also include long_description, download_url,
 )
