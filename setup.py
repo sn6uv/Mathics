@@ -46,6 +46,7 @@ if sys.subversion[0] == 'PyPy':
 else:
     is_PyPy = False
 
+# cython is an optional dependency
 try:
     if is_PyPy:
         raise ImportError
@@ -69,9 +70,10 @@ else:
 # General Requirements
 SETUP_REQUIRES = [] # TODO ipython
 
-INSTALL_REQUIRES += ['sympy==0.7.6', 'django >= 1.8, < 1.9', 'ply>=3.8',
-                     'mpmath>=0.19', 'python-dateutil',
-                     'interruptingcow'] + SETUP_REQUIRES
+INSTALL_REQUIRES += ['sympy==0.7.6', 'mpmath>=0.19', 'ply>=3.8',
+                     'python-dateutil', 'interruptingcow']
+
+INSTALL_REQUIRES += SETUP_REQUIRES
 
 # if sys.platform == "darwin":
 #    INSTALL_REQUIRES += ['readline']

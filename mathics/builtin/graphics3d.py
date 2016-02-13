@@ -14,8 +14,6 @@ from graphics import (Graphics, GraphicsBox, PolygonBox, create_pens, _Color,
 
 import json
 
-from django.utils.html import escape as escape_html
-
 
 def coords3D(value):
     if value.has_form('List', 3):
@@ -563,6 +561,10 @@ currentlight=light(rgb(0.5,0.5,1), specular=red, (2,0,2), (2,2,2), (0,2,2));
             'lighting': self.lighting,
             'viewpoint': self.viewpoint,
         })
+
+        def escape_html(code):
+            # TODO - replace djago.utils.html.escape_html
+            raise NotImplementedError
 
         # return "<mn>3</mn>"
 

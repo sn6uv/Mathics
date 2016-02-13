@@ -95,7 +95,7 @@ Simply run:
 <console>
 # python setup.py install
 </console>
-In addition to installing \Mathics, this will download the required Python packages <con>sympy</con>, <con>mpmath</con>, <con>django</con>, and <con>pysqlite</con> and install them in your Python <con>site-packages</con> directory (usually <con>/usr/lib/python2.x/site-packages</con> on Debian or <con>/Library/Frameworks/Python.framework/Versions/2.x/lib/python2.x/site-packages</con> on Mac OS X).
+In addition to installing \Mathics, this will download the required additional Python packages and install them in your Python <con>site-packages</con> directory (usually <con>/usr/lib/python2.x/site-packages</con> on Debian or <con>/Library/Frameworks/Python.framework/Versions/2.x/lib/python2.x/site-packages</con> on Mac OS X).
 
 Two executable files will be created in a binary directory on your <con>PATH</con> (usually <con>/usr/bin</con> on Debian or <con>/Library/Frameworks/Python.framework/Versions/2.x/bin</con> on Mac OS X): <con>mathics</con> and <con>mathicsserver</con>.
 </section>
@@ -1090,11 +1090,7 @@ Run
 <console>
 $ python setup.py develop
 </console>
-This will temporarily overwrite the installed package in your Python library with a link to the current source directory. In addition, you might want to start the Django development server with
-<console>
-$ python manage.py runserver
-</console>
-It will restart automatically when you make changes to the source code.
+This will temporarily overwrite the installed package in your Python library with a link to the current source directory.
 </section>
 
 <section title="Documentation and tests">
