@@ -1,5 +1,5 @@
 ## Mathics: a general-purpose computer algebra system
-## Copyright (C) 2011-2013 The Mathics Team
+## Copyright (C) The Mathics Team
 ##
 ## This program is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -1119,6 +1119,16 @@ You can also run the tests for individual built-in symbols using
 python test.py -s [name]
 </console>
 This will not re-create the corresponding documentation results, however. You have to run a complete test to do that.
+
+For more details see
+<console>
+$ python test.py --help
+</console>
+
+In addition, \Mathics has some unittests in the <con>tests/</con> directory. These cover additional functionality such as tests for the parsrer and conversion to/from SymPy. These can be run using
+<console>
+$ python setup.py test
+</console>
 </section>
 
 <section title="Documentation markup">
