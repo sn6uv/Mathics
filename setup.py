@@ -70,7 +70,7 @@ else:
 SETUP_REQUIRES = [] # TODO ipython
 
 INSTALL_REQUIRES += ['sympy==0.7.6', 'django >= 1.8, < 1.9', 'ply>=3.8',
-                     'mpmath>=0.19', 'python-dateutil', 'colorama',
+                     'mpmath>=0.19', 'python-dateutil',
                      'interruptingcow'] + SETUP_REQUIRES
 
 # if sys.platform == "darwin":

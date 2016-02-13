@@ -27,9 +27,7 @@ Thanks to the authors of all projects that are used in Mathics:
 - Python
 - scripaculous
 - PLY
-- colorama
 - SymPy
 - Three.js
 - interruptingcow
 - dateutil
-- colorama
