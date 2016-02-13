@@ -45,7 +45,7 @@ def compare(result, wanted):
         return True
     if result is None or wanted is None:
         return False
-    wanted_re = re.escape(wanted.strip())
+    wanted_re = re.escape(wanted)
     wanted_re = wanted_re.replace('\\.\\.\\.', '.*?')
     wanted_re = '^%s$' % wanted_re
     if not re.match(wanted_re, result.strip(), re.MULTILINE):
