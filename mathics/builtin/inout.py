@@ -537,6 +537,10 @@ class GridBox(BoxConstruct):
                 else:
                     break
                 k += 1
+
+        # leading and trailing strip whitespace from each line
+        result = '\n'.join(line.strip() for line in result.split('\n'))
+
         return result
 
 
@@ -591,6 +595,7 @@ class TableForm(Builtin):
      . -Graphics-   -Graphics-   -Graphics-
      .
      . -Graphics-   -Graphics-   -Graphics-
+     .
     """
 
     options = {
@@ -1197,7 +1202,7 @@ class MathMLForm(Builtin):
 
     #> MathMLForm[Graphics[Text["\u03bc"]]]
      = <math><mtable><mtr><mtd><svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg"
-     .  version="1.0" width="..." height="..." viewBox="..."><foreignObject x="..." y="..." ox="0.000000" oy="0.000000" style="stroke: none; fill: none; color: rgb(0.000000%, 0.000000%, 0.000000%)"><math><mtext>\u03bc</mtext></math></foreignObject></svg></mtd></mtr></mtable></math>
+     . version="1.0" width="..." height="..." viewBox="..."><foreignObject x="..." y="..." ox="0.000000" oy="0.000000" style="stroke: none; fill: none; color: rgb(0.000000%, 0.000000%, 0.000000%)"><math><mtext>\u03bc</mtext></math></foreignObject></svg></mtd></mtr></mtable></math>
 
     ## The <mo> should contain U+2062 INVISIBLE TIMES
     #> MathMLForm[MatrixForm[{{2*a, 0},{0,0}}]]
