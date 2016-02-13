@@ -75,9 +75,6 @@ INSTALL_REQUIRES += ['sympy==0.7.6', 'mpmath>=0.19', 'ply>=3.8',
 
 INSTALL_REQUIRES += SETUP_REQUIRES
 
-# if sys.platform == "darwin":
-#    INSTALL_REQUIRES += ['readline']
-
 kernel_json = {
     'argv': [sys.executable,
              '-m', 'mathics',
@@ -154,8 +151,6 @@ setup(
     ],
 
     install_requires=INSTALL_REQUIRES,
-
-    setup_requires=SETUP_REQUIRES,
 
     package_data={
         'mathics': [
