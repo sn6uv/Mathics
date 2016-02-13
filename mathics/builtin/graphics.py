@@ -171,6 +171,7 @@ class Graphics(Builtin):
      . draw(ellipse((175.0,175.0),175.0,175.0), rgb(0, 0, 0)+linewidth(0.666666666667));
      . clip(box((-0.333333333333,0.333333333333), (350.333333333,349.666666667)));
      . \end{asy}
+     .
 
     Invalid graphics directives yield invalid box structures:
     >> Graphics[Circle[{a, b}]]

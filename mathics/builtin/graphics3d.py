@@ -88,6 +88,7 @@ class Graphics3D(Graphics):
      . draw(((-1.0,1.0,-1.0)--(-1.0,1.0,1.0)), rgb(0.4, 0.4, 0.4)+linewidth(1));
      . draw(((1.0,1.0,-1.0)--(1.0,1.0,1.0)), rgb(0.4, 0.4, 0.4)+linewidth(1));
      . \end{asy}
+     .
 
     #> Graphics3D[Point[Table[{Sin[t], Cos[t], 0}, {t, 0, 2. Pi, Pi / 15.}]]] // TeXForm
      = 
@@ -111,6 +112,7 @@ class Graphics3D(Graphics):
      . draw(((-0.994521895368,1.0,-1.0)--(-0.994521895368,1.0,1.0)), rgb(0.4, 0.4, 0.4)+linewidth(1));
      . draw(((0.994521895368,1.0,-1.0)--(0.994521895368,1.0,1.0)), rgb(0.4, 0.4, 0.4)+linewidth(1));
      . \end{asy}
+     .
     """
 
     options = Graphics.options.copy()
