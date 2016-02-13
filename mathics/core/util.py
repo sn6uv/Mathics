@@ -192,3 +192,17 @@ def unicode_superscript(value):
             value = ord(c)
         return unichr(value)
     return u''.join(repl_char(c) for c in value)
+
+
+html_escape_table = {
+    "&": "&amp;",
+    '"': "&quot;",
+    "'": "&apos;",
+    ">": "&gt;",
+    "<": "&lt;",
+}
+
+
+def escape_html(text):
+    """Produce entities within text."""
+    return "".join(html_escape_table.get(c,c) for c in text)

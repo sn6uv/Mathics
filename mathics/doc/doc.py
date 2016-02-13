@@ -24,9 +24,6 @@ import re
 from os import listdir, path
 import pickle
 
-from django.utils.html import escape, linebreaks
-from django.utils.safestring import mark_safe
-
 from mathics import settings
 
 from mathics import builtin
@@ -521,7 +518,7 @@ def escape_html(text, verbatim_mode=False, counters=None, single_line=False):
         text = text.replace('\\' + key, xml)
 
     if not single_line:
-        text = linebreaks(text)
+        text = ''.join('<p>' + ''.join((line + '<br />' for line in paragraph.split('\n'))) + '</p>' for paragraph in text.split('\n\n'))
         text = text.replace('<br />', '\n').replace('<br>', '<br />')
 
     text = post_sub(text, post_substitutions)
@@ -561,7 +558,7 @@ class DocElement(object):
         return prev, next
 
     def get_title_html(self):
-        return mark_safe(escape_html(self.title, single_line=True))
+        return escape_html(self.title, single_line=True)
 
 
 class Documentation(DocElement):
@@ -876,8 +873,7 @@ class Doc(object):
 
     def html(self):
         counters = {}
-        return mark_safe('\n'.join(item.html(counters) for item in self.items
-                         if not item.is_private()))
+        return '\n'.join(item.html(counters) for item in self.items if not item.is_private())
 
 
 class DocText(object):

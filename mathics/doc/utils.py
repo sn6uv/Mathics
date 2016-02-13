@@ -20,22 +20,16 @@ u"""
 
 import re
 import unicodedata
-
-from django.template.defaultfilters import register, stringfilter
-from django.utils import six
-from django.utils.functional import allow_lazy
-from django.utils.safestring import mark_safe
+import six
 
 
 def slugify_symbol(value):
+    value = six.text_type(value)
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
     value = re.sub('[^$`\w\s-]', '', value).strip().lower()
-    return mark_safe(re.sub('[-\s`]+', '-', value))
-slugify_symbol = allow_lazy(slugify_symbol, six.text_type)
+    return re.sub('[-\s`]+', '-', value)
 
 
-@register.filter(is_safe=True)
-@stringfilter
 def slugify(value):
     """
     Converts to lowercase, removes non-word characters apart from '$',
