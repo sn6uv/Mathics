@@ -157,7 +157,6 @@ setup(
         'mathics.doc',
     ],
 
-    setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
 
     package_data={
