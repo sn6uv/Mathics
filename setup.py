@@ -90,7 +90,7 @@ class InstallMathics(install):
     def run(self):
         # The recommended way is with the setup_requires argument to setup
         # This fails because ipython doesn't build under easy_install
-        subprocess.call(['pip', 'install'] + SETUP_REQUIRES)
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install'] + SETUP_REQUIRES)
 
         # Unfortunately the recommended call to 'install.run(self)'
         # will completely ignore the install_requirements.
