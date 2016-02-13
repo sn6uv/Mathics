@@ -30,6 +30,7 @@ import json
 from distutils import log
 
 from setuptools import setup, Command, Extension
+from setuptools.command import easy_install
 from setuptools.command.install import install
 
 # Ensure user has the correct Python version
@@ -68,7 +69,7 @@ else:
     INSTALL_REQUIRES = ['cython>=0.15.1']
 
 # General Requirements
-SETUP_REQUIRES = [] # TODO ipython
+SETUP_REQUIRES = ['ipython', 'ipykernel']
 
 INSTALL_REQUIRES += ['sympy==0.7.6', 'mpmath>=0.19', 'ply>=3.8',
                      'python-dateutil', 'interruptingcow']
@@ -84,10 +85,19 @@ kernel_json = {
     'name': 'mathics',
 }
 
-class install_with_kernelspec(install):
-    def run(self):
-        install.run(self)
+class InstallMathics(install):
 
+    def run(self):
+        easy_install.main(SETUP_REQUIRES)
+
+        # Unfortunately the recommended call to 'install.run(self)'
+        # will completely ignore the install_requirements.
+        # So we trick it by calling the underlying bdist_egg instead:
+        self.do_egg_install()
+
+        self.install_kernelspec()
+
+    def install_kernelspec(self):
         from ipykernel.kernelspec import write_kernel_spec
         from jupyter_client.kernelspec import KernelSpecManager
 
@@ -135,7 +145,7 @@ class test(Command):
 
 
 CMDCLASS['test'] = test
-CMDCLASS['install'] = install_with_kernelspec
+CMDCLASS['install'] = InstallMathics
 
 setup(
     name="Mathics",
