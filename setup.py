@@ -30,7 +30,6 @@ import json
 from distutils import log
 
 from setuptools import setup, Command, Extension
-from setuptools.command import easy_install
 from setuptools.command.install import install
 
 # Ensure user has the correct Python version
@@ -88,8 +87,6 @@ kernel_json = {
 class InstallMathics(install):
 
     def run(self):
-        easy_install.main(SETUP_REQUIRES)
-
         # Unfortunately the recommended call to 'install.run(self)'
         # will completely ignore the install_requirements.
         # So we trick it by calling the underlying bdist_egg instead:
@@ -160,6 +157,7 @@ setup(
         'mathics.doc',
     ],
 
+    setup_requires=SETUP_REQUIRES,
     install_requires=INSTALL_REQUIRES,
 
     package_data={
