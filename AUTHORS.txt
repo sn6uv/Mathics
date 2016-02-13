@@ -21,11 +21,8 @@ Additional contributions were made by:
 - Toshiyuki Ogura (ogra)
 
 Thanks to the authors of all projects that are used in Mathics:
-- Django
-- MathJax
-- Prototype
 - Python
-- scripaculous
+- Project Jupyter
 - PLY
 - SymPy
 - Three.js
