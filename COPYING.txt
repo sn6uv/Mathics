@@ -26,9 +26,6 @@ on the websites specified in "data/elements.txt".
 SOFTWARE                           LICENSE
 ----------------------------------------------
 PLY                                BSD 3-Clause
-scripaculous                       MIT
-Prototype                          MIT
-MathJax                            Apache 2.0
 Three.js                           MIT
 pymimemagic                        BSD 3-Clause
  
