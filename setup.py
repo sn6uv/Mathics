@@ -26,6 +26,7 @@ mathics-users@googlegroups.com and ask for help.
 import sys
 import os
 import json
+import subprocess
 
 from distutils import log
 
@@ -87,6 +88,10 @@ kernel_json = {
 class InstallMathics(install):
 
     def run(self):
+        # The recommended way is with the setup_requires argument to setup
+        # This fails because ipython doesn't build under easy_install
+        subprocess.call(['pip', 'install'] + SETUP_REQUIRES)
+
         # Unfortunately the recommended call to 'install.run(self)'
         # will completely ignore the install_requirements.
         # So we trick it by calling the underlying bdist_egg instead:
