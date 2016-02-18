@@ -56,7 +56,6 @@ class LinkedTriangle(object):
         '''
         finds cos of the angle between this triangle and another
         '''
-        assert other in self.neighbors()
 
         n1 = self.surface_normal()
         n2 = other.surface_normal()
@@ -1048,104 +1047,103 @@ class _Plot3D(Builtin):
             points = [p for p in row for row in points]
 
             # adaptive resampling
-
             # cos of max allowed angle between neighbor triangles
-            ang_thresh = cos(2 * pi / 180)
+            ang_thresh = cos(20 * pi / 180)
 
-            # scale factors
-            zstart, zstop = zrange(triangles)
-            scale_factors = (1 / zero_to_one(xstop - xstart),
-                             1 / zero_to_one(ystop - ystart),
-                             1 / zero_to_one(zstop - zstart))
+            for depth in range(max_depth):
+                # scale factors
+                zstart, zstop = zrange(triangles)
+                scale_factors = (xstop - xstart,
+                                 ystop - ystart,
+                                 zstop - zstart)
 
-            # mark triangles for subdivision
-            marked = set([])
-            for t1 in triangles:
-                if not t1.is_defined():
-                    marked.add(t1)
-                    continue
-                for t2 in t1.neighbors():
-                    if t2.is_defined() and abs(t1.cos_angle_to(t2, scale_factors)) < ang_thresh:
+                # mark triangles for subdivision
+                marked = set([])
+                for t1 in triangles:
+                    if not t1.is_defined():
                         marked.add(t1)
-                        marked.add(t2)
+                        continue
+                    for t2 in t1.neighbors():
+                        if t2.is_defined() and abs(t1.cos_angle_to(t2, scale_factors)) < ang_thresh:
+                            marked.add(t1)
+                            marked.add(t2)
 
-            # which edges should we divide
-            edges_to_divide = set([])
-            while marked:
-                t = marked.pop()
-                for p1, p2 in itertools.combinations(t.points, 2):
-                    if p2 < p1:
-                        p1, p2 = p2, p1
-                    edges_to_divide.add((p1, p2))
-
-            # for any triangle t with exactly two split edges we should
-            # also divide the third one to get a sub-triangulation of t
-            changed = True
-            while changed:
-                changed = False
-                for t in triangles:
-                    edge_count = 0
+                # which edges should we divide
+                edges_to_divide = set([])
+                while marked:
+                    t = marked.pop()
                     for p1, p2 in itertools.combinations(t.points, 2):
                         if p2 < p1:
                             p1, p2 = p2, p1
-                        if (p1, p2) in edges_to_divide:
-                            edge_count += 1
-                    if edge_count == 2:
+                        edges_to_divide.add((p1, p2))
+
+                # for any triangle t with exactly two split edges we should
+                # also divide the third one to get a sub-triangulation of t
+                changed = True
+                while changed:
+                    changed = False
+                    for t in triangles:
+                        edge_count = 0
                         for p1, p2 in itertools.combinations(t.points, 2):
                             if p2 < p1:
                                 p1, p2 = p2, p1
-                            edges_to_divide.add((p1, p2))
-                        changed = True
+                            if (p1, p2) in edges_to_divide:
+                                edge_count += 1
+                        if edge_count == 2:
+                            for p1, p2 in itertools.combinations(t.points, 2):
+                                if p2 < p1:
+                                    p1, p2 = p2, p1
+                                edges_to_divide.add((p1, p2))
+                            changed = True
 
-            # divide the edges to find new points
-            for p1, p2 in edges_to_divide:
-                x3 = 0.5 * (p1.x + p2.x)
-                y3 = 0.5 * (p1.y + p2.y)
-                z3 = eval_f(x3, y3)
-                p3 = LinkedPoint(x3, y3, z3)
+                # divide the edges to find new points
+                for p1, p2 in edges_to_divide:
+                    x3 = 0.5 * (p1.x + p2.x)
+                    y3 = 0.5 * (p1.y + p2.y)
+                    z3 = eval_f(x3, y3)
+                    p3 = LinkedPoint(x3, y3, z3)
 
-                # link the points
-                p1.add_child_points(p3)
-                p2.add_child_points(p3)
-                p3.add_parent_points(p1, p2)
+                    # link the points
+                    p1.add_child_points(p3)
+                    p2.add_child_points(p3)
+                    p3.add_parent_points(p1, p2)
 
-            # subdivide the edges and construct new triangles
-            new_triangles = []
-            triangles_to_remove = []
-            for triangle in triangles:
-                new_points = set([])
-                for point in triangle.points:
-                    for child_point in point.child_points:
-                        for parent_point in child_point.parent_points:
-                            if parent_point != point and parent_point in triangle.points:
-                                # parents of child point form an edge of triangle
-                                new_points.add(child_point)
-                new_points = list(new_points)
-                if len(new_points) == 0:
-                    pass
-                elif len(new_points) == 1:
-                    # cut the triangle into 2 pieces
-                    new_triangles.extend(triangle.subdivide2(*new_points))
-                    triangles_to_remove.append(triangle)
-                elif len(new_points) == 3:
-                    # cut the triangle into 4 pieces
-                    new_triangles.extend(triangle.subdivide4(*new_points))
-                    triangles_to_remove.append(triangle)
-                else:
-                    # the len(new_points) == 2 case has already been excluded
-                    raise AssertionError
+                # subdivide the edges and construct new triangles
+                new_triangles = []
+                triangles_to_remove = []
+                for triangle in triangles:
+                    new_points = set([])
+                    for point in triangle.points:
+                        for child_point in point.child_points:
+                            for parent_point in child_point.parent_points:
+                                if parent_point != point and parent_point in triangle.points:
+                                    # parents of child point form an edge of triangle
+                                    new_points.add(child_point)
+                    new_points = list(new_points)
+                    if len(new_points) == 0:
+                        pass
+                    elif len(new_points) == 1:
+                        # cut the triangle into 2 pieces
+                        new_triangles.extend(triangle.subdivide2(*new_points))
+                        triangles_to_remove.append(triangle)
+                    elif len(new_points) == 3:
+                        # cut the triangle into 4 pieces
+                        new_triangles.extend(triangle.subdivide4(*new_points))
+                        triangles_to_remove.append(triangle)
+                    else:
+                        # the len(new_points) == 2 case has already been excluded
+                        raise AssertionError
 
-            for triangle in triangles_to_remove:
-                triangles.remove(triangle)
+                for triangle in triangles_to_remove:
+                    triangles.remove(triangle)
+
+                triangles.extend(new_triangles)
 
             # TODO add the mesh
             mesh_points = []
 
             # find the max and min height
             v_min, v_max = zrange(triangles)
-
-            # TODO
-            triangles.extend(new_triangles)
             # convert to python [(float, float, float), ...]
             triangles = [[(point.x, point.y, point.z) for point in triangle.points] for triangle in triangles if triangle.is_defined()]
 
