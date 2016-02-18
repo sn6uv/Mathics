@@ -80,34 +80,42 @@ class TerminalShell(object):
     def get_last_line_number(self):
         return self.definitions.get_line()
 
-    def get_in_prompt(self, continued=False):
+    def get_in_prompt(self, noprompt, continued=False):
+        if noprompt:
+            return ''
         next_line_number = self.get_last_line_number() + 1
         if continued:
             return ' ' * len('In[{0}]:= '.format(next_line_number))
         else:
             return '{1}In[{2}{0}{3}]:= {4}'.format(next_line_number, *self.incolors)
 
-    def get_out_prompt(self):
+    def get_out_prompt(self, noprompt):
+        if noprompt:
+            return ''
         line_number = self.get_last_line_number()
         return '{1}Out[{2}{0}{3}]= {4}'.format(line_number, *self.outcolors)
 
+    def to_output(self, text):
+        line_number = self.get_last_line_number()
+        newline = '\n' + ' ' * len('Out[{0}]= '.format(line_number))
+        return newline.join(text.splitlines())
+
     def evaluate(self, text):
-        def to_output(text):
-            line_number = self.get_last_line_number()
-            newline = '\n' + ' ' * len('Out[{0}]= '.format(line_number))
-            return newline.join(text.splitlines())
 
         def out_callback(out):
-            print(to_output(six.text_type(out)))
+            print(self.to_output(six.text_type(out)))
 
         evaluation = Evaluation(text,
                                 self.definitions,
                                 timeout=settings.TIMEOUT,
                                 out_callback=out_callback)
-        for result in evaluation.results:
+        return evaluation.results
+
+    def print_results(self, results, noprompt):
+        for result in results:
             if result.result is not None:
-                print(self.get_out_prompt() +
-                      to_output(six.text_type(result.result)) + '\n')
+                print(self.get_out_prompt(noprompt) +
+                      self.to_output(six.text_type(result.result)) + '\n')
 
     def read_line(self, prompt):
         if self.using_readline:
@@ -240,6 +248,9 @@ def main():
         '--no-completion', help="disable tab completion", action='store_true')
 
     argparser.add_argument(
+        '-noprompt', help="hide input/output prompts", action='store_true')
+
+    argparser.add_argument(
         '--no-readline', help="disable line editing (implies --no-completion)",
         action='store_true')
 
@@ -258,7 +269,7 @@ def main():
         definitions, args.colors, want_readline=not(args.no_readline),
         want_completion=not(args.no_completion))
 
-    if not (args.quiet or args.script):
+    if not (args.quiet or args.script or args.noprompt):
         print()
         print(version_string + '\n')
         print(license_string + '\n')
@@ -267,8 +278,8 @@ def main():
     if args.execute:
         for expr in args.execute:
             # expr = expr.decode(shell.input_encoding)
-            print(shell.get_in_prompt() + expr)
-            shell.evaluate(expr)
+            print(shell.get_in_prompt(args.noprompt) + expr)
+            shell.print_results(shell.evaluate(expr), args.noprompt)
         if not args.persist:
             return
 
@@ -279,16 +290,16 @@ def main():
                 # line = line.decode('utf-8')     # TODO: other encodings
                 if args.script and line_no == 0 and line.startswith('#!'):
                     continue
-                print(shell.get_in_prompt(continued=total_input != '') + line.rstrip('\n'))
+                print(shell.get_in_prompt(args.noprompt, continued=total_input != '') + line.rstrip('\n'))
                 total_input += ' ' + line
                 if line != "" and wait_for_line(total_input):
                     continue
-                shell.evaluate(total_input)
+                shell.print_results(shell.evaluate(total_input), args.noprompt)
                 total_input = ""
             except (KeyboardInterrupt):
                 print('\nKeyboardInterrupt')
             except (SystemExit, EOFError):
-                if not (args.script or args.quiet):
+                if not (args.script or args.quiet or args.noprompt):
                     print("\n\nGood bye!\n")
                 break
         if not args.persist:
@@ -298,16 +309,17 @@ def main():
     while True:
         try:
             line = shell.read_line(
-                shell.get_in_prompt(continued=total_input != ''))
+                shell.get_in_prompt(args.noprompt, continued=total_input != ''))
             total_input += line
             if line != "" and wait_for_line(total_input):
                 continue
-            shell.evaluate(total_input)
+            shell.print_results(shell.evaluate(total_input), args.noprompt)
             total_input = ""
         except (KeyboardInterrupt):
             print('\nKeyboardInterrupt')
         except (SystemExit, EOFError):
-            print("\n\nGood bye!\n")
+            if not (args.script or args.quiet or args.noprompt):
+                print("\n\nGood bye!\n")
             break
 
 if __name__ == '__main__':
