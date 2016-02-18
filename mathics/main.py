@@ -288,7 +288,8 @@ def main():
             except (KeyboardInterrupt):
                 print('\nKeyboardInterrupt')
             except (SystemExit, EOFError):
-                print("\n\nGood bye!\n")
+                if not (args.script or args.quiet):
+                    print("\n\nGood bye!\n")
                 break
         if not args.persist:
             return
