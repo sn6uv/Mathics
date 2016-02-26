@@ -293,15 +293,17 @@ class Evaluation(object):
     def stop(self):
         self.stopped = True
 
-    def format_output(self, expr):
+    def format_output(self, expr, format=None):
         from mathics.core.expression import Expression, String, BoxError
+        if format is None:
+            format = self.format
 
-        if self.format == 'text':
+        if format == 'text':
             result = expr.format(self, 'System`OutputForm')
-        elif self.format == 'xml':
+        elif format == 'xml':
             result = Expression(
                 'StandardForm', expr).format(self, 'System`MathMLForm')
-        elif self.format == 'tex':
+        elif format == 'tex':
             result = Expression('StandardForm', expr).format(
                 self, 'System`TeXForm')
         else:
@@ -345,8 +347,8 @@ class Evaluation(object):
         if text is None:
             text = String("Message %s::%s not found." % (symbol_shortname, tag))
 
-        text = self.format_output(Expression(
-            'StringForm', text, *(from_python(arg) for arg in args)))
+        msg_expr = Expression('StringForm', text, *(from_python(arg) for arg in args))
+        text = self.format_output(msg_expr)
 
         self.out.append(Message(symbol_shortname, tag, text))
         if self.out_callback:
