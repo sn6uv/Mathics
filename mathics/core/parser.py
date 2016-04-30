@@ -209,7 +209,7 @@ precedence = (
     # This is a hack to get implicit times working properly:
     ('left', 'Times', 'RawStar', 'blanks', 'blankdefault', 'out', 'slot',
      'slotseq', 'string', 'symbol', 'number', 'RawLeftBrace',
-     'RawLeftParenthesis'),  # flat,
+     'RawLeftParenthesis', 'LeftAssociation'),  # flat,
     ('left', 'CenterDot'),                  # flat
     ('left', 'CircleTimes'),                # flat
     ('left', 'Vee'),                        # flat
@@ -269,6 +269,8 @@ tokens = (
     'RawRightBrace',
     'RawLeftParenthesis',
     'RawRightParenthesis',
+    'LeftAssociation',
+    'RightAssociation',
     'LeftBoxParenthesis',
     'RightBoxParenthesis',
     'LeftBoxParenthesisInternal',
@@ -435,6 +437,8 @@ class MathicsScanner:
     t_RawRightBrace = r' \} '
     t_RawLeftParenthesis = r' \( '
     t_RawRightParenthesis = r' \) '
+    t_LeftAssociation = r' \<\| '
+    t_RightAssociation = r' \|\> '
 
     t_RawComma = r' \, '
 
@@ -1403,6 +1407,10 @@ class MathicsParser:
         else:
             args[1].leaves.append(Symbol('Null'))
         args[0] = args[1]
+
+    def p_Association(self, args):
+        '''expr : LeftAssociation sequence RightAssociation'''
+        args[0] = Expression('Association', *args[2].items)
 
     def p_box_to_expr(self, args):
         '''expr : LeftBoxParenthesis boxes RightBoxParenthesis
