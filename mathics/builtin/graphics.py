@@ -1393,6 +1393,10 @@ clip(box((%s,%s), (%s,%s)));
             'height="%f" viewBox="%f %f %f %f">%s</svg>') % (
                 width, height, xmin, ymin, w, h, svg)
 
+        # The correct way to embedd svg within mathml is with mtext. See the
+        # discussion at https://github.com/mathjax/MathJax/issues/896
+        xml = '<mtext>%s</mtext>' % xml
+
         xml = """<mtable><mtr><mtd>%s</mtd></mtr></mtable>""" % xml
         return xml
 
