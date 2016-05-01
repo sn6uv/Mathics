@@ -15,6 +15,9 @@ from six.moves import map
 from six.moves import range
 from six.moves import zip
 
+from sympy import Point as SympyPoint
+from sympy import Line as SympyLine
+
 from mathics.builtin.base import (
     Builtin, InstancableBuiltin, BoxConstruct, BoxConstructError)
 from mathics.builtin.options import options_to_rules
@@ -118,8 +121,8 @@ def create_css(edge_color=None, face_color=None, stroke_width=None,
         color, opacity = face_color.to_css()
         css.append('fill: %s' % color)
         css.append('fill-opacity: %s' % opacity)
-    else:
-        css.append('fill: none')
+    # else:
+    #     css.append('fill: none')
     if font_color is not None:
         color, opacity = font_color.to_css()
         css.append('color: %s' % color)
@@ -289,6 +292,10 @@ class _Color(_GraphicsElement):
 
     def to_js(self):
         return self.to_rgba()
+
+    def to_hex(self):
+        rgba = self.to_rgba()
+        return '#' + ''.join('%02x' % int(255 * i) for i in rgba[:3])
 
     def to_expr(self):
         return Expression(self.get_name(), *self.components)
@@ -829,17 +836,47 @@ class PolygonBox(_Polyline):
             face_color = None
         style = create_css(
             edge_color=self.edge_color, face_color=face_color, stroke_width=l)
-        svg = ''
         if self.vertex_colors is not None:
-            mesh = []
-            for index, line in enumerate(self.lines):
-                data = [[coords.pos(), color.to_js()] for coords, color in zip(
-                    line, self.vertex_colors[index])]
-                mesh.append(data)
-            svg += '<meshgradient data="%s" />' % json.dumps(mesh)
-        for line in self.lines:
-            svg += '<polygon points="%s" style="%s" />' % (
-                ' '.join('%f,%f' % coords.pos() for coords in line), style)
+            # SVG 2.0 adds mesh gradient support but it's not released yet.
+            # To work around this we make do with linear gradients.
+            # TODO: support more than triangles
+            gradients = []
+            for i, line in enumerate(self.lines):
+                points = [SympyPoint(*coords.pos()) for coords in line]
+                colors = self.vertex_colors[i]
+                grad_str = (
+                    '<linearGradient gradientUnits="userSpaceOnUse" id="%s" x1="%f" y1="%f" x2="%f" y2="%f">'
+                    '<stop offset="0.0" stop-color="%s" stop-opacity="%f"/>'
+                    '<stop offset="1.0" stop-color="%s" stop-opacity="%f"/>'
+                    '</linearGradient>')
+                p0, p1, p2 = points[0], points[1], points[2]
+                c0, c1, c2 = colors[0].to_hex(), colors[1].to_hex(), colors[2].to_hex()
+                l = SympyLine(p1, p2)
+                p3 = l.projection(p0)
+                g1 = grad_str % (
+                    'grad%ia' % i, p1.x, p1.y, p2.x, p2.y,
+                    c1, 1.0,
+                    c2, 1.0)
+                g2 = grad_str % (
+                    'grad%ib' % i, p0.x, p0.y, p3.x, p3.y,
+                    c0, 1.0,
+                    c0, 0.0)
+                gradients.append(g1)
+                gradients.append(g2)
+
+            polygons = []
+            for i, line in enumerate(self.lines):
+                points = ' '.join('%f,%f' % coords.pos() for coords in line)
+                for gradid in ('grad%ia' % i, 'grad%ib' % i):
+                    polygon = '<polygon points="%s" style="%s" fill="url(#%s)"/>' % (
+                        points, style, gradid)
+                    polygons.append(polygon)
+
+            svg = '<defs>\n%s\n</defs>\n<g shape-rendering="crispEdges">\n%s\n</g>' % ('\n'.join(gradients), '\n'.join(polygons))
+        else:
+            for line in self.lines:
+                svg = '<polygon points="%s" style="%s" />' % (
+                    ' '.join('%f,%f' % coords.pos() for coords in line), style)
         return svg
 
     def to_asy(self):
@@ -1389,7 +1426,7 @@ clip(box((%s,%s), (%s,%s)));
 
         xml = (
             '<svg xmlns:svg="http://www.w3.org/2000/svg" '
-            'xmlns="http://www.w3.org/2000/svg"\nversion="1.0" width="%f" '
+            'xmlns="http://www.w3.org/2000/svg"\nversion="1.1" width="%f" '
             'height="%f" viewBox="%f %f %f %f">%s</svg>') % (
                 width, height, xmin, ymin, w, h, svg)
 
