@@ -1021,6 +1021,14 @@ class OptionsPattern(PatternObject):
     #> f[10, Power -> 3]
      = 1000
     #> Clear[f]
+
+    #> Options[f] = {y -> Null};
+    #> f[x_, OptionsPattern[f]] := If[OptionValue[y] === Null, x, x <> OptionValue[y]]
+    #> f["abc"]
+     = abc
+    #> f["abc", y -> "def"]
+     = abcdef
+    #> Clear[f]
     """
 
     arg_counts = [0, 1]
