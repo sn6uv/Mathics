@@ -56,7 +56,7 @@ before_install:
       sudo apt-get install -qq python-numpy;
     fi
   - if [[ "$SKIMAGE" == "true" ]]; then
-      sudo apt-get install -qq install python-matplotlib python-pil python-scipy &&
+      sudo apt-get install -qq python-matplotlib python-scipy &&
       pip install scikit-image;
     fi
   - pip install unittest2
