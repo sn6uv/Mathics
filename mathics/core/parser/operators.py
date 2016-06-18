@@ -8,6 +8,7 @@ from collections import defaultdict
 
 prefix_ops = {
     'Get': 720,
+    'SqrtBox': 670,
     'PreIncrement': 660,
     'PreDecrement': 660,
     'Del': 550,
@@ -35,6 +36,7 @@ postfix_ops = {
 }
 
 left_binary_ops = {
+    'FractionBox': 670,
     'Divide': 470,
     'Subtract': 310,
     'LeftTee': 190,
@@ -49,10 +51,15 @@ left_binary_ops = {
 }
 
 right_binary_ops = {
+    'OverscriptBox': 710,
+    'UnderscriptBox': 710,
+    'SubscriptBox': 695,
+    'FormBox': 670,
     'Apply': 620,
     'Map': 620,
     'MapAll': 620,
     'Power': 590,
+    'SuperscriptBox': 590,
     'RightTee': 190,
     'DoubleRightTee': 190,
     'SuchThat': 180,
@@ -135,6 +142,8 @@ nonassoc_binary_ops = {
 }
 
 ternary_ops = {
+    'UnderoverscriptBox': 700,
+    'SubsuperscriptBox': 690,
     'Span': 305,
     'Infix': 630,   # TODO
 }
