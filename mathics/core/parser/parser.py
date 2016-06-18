@@ -144,6 +144,53 @@ class Parser(object):
             result = String('')
         return result
 
+    def convert_rowbox(self, node):
+        children = [self.convert_rowbox(child) for child in node.children]
+        if None in children:
+            return None
+
+        head_name = node.get_head_name()
+        if head_name == 'RowBox':
+            if len(children) == 0:
+                return Symbol('Null')
+            return Node('Times', *children)
+        elif head_name == 'SuperscriptBox':
+            assert len(children) == 2
+            return Node('Power', children[0], children[1])
+        elif head_name == 'SubscriptBox':
+            assert len(children) == 2
+            return Node('Power', children[0], children[1])
+        elif head_name == 'Subsuperscript':
+            assert len(children) == 3
+            return Node('Power', children[0], children[1], children[2])
+        elif head_name == 'OverscriptBox':
+            assert len(children) == 2
+            return Node('Overscript', children[0], children[1])
+        elif head_name == 'UnderscriptBox':
+            assert len(children) == 2
+            return Node('Underscript', children[0], children[1])
+        elif head_name == 'UnderoverscriptBox':
+            assert len(children) == 3
+            return Node('Underoverscript', children[0], children[1], children[2])
+        elif head_name == 'FractionBox':
+            assert len(children) == 2
+            return Node('Times', children[0], Node('Power', children[1], Number('-1'))).flatten()
+        elif head_name == 'SqrtBox':
+            assert len(children) == 1
+            return Node('Sqrt', children[0])
+        elif head_name == 'RadicalBox':
+            assert len(children) == 2
+            return Node('Power', children[0], Node('Times', Number('1'), Node('Power', children[1], Number('-1'))))
+        elif head_name == 'FormBox':
+            assert len(children) == 2
+            return None     # TODO
+        elif head_name == 'String':
+            assert len(children) == 0
+            # TODO
+            return None
+        else:
+            return None
+
     def parse_seq(self):
         result = []
         while True:
@@ -414,6 +461,17 @@ class Parser(object):
         self.consume()
         q = prefix_ops['PreDecrement']
         return Node('PreDecrement', self.parse_exp(q))
+
+    def p_InterpretedBox(self, token):
+        self.consume()
+        token = self.next()
+        if token.tag != 'LeftRowBox':
+            raise InvalidSyntaxError(token)
+        result = self.convert_rowbox(self.p_LeftRowBox(token))
+        print(result)
+        if result is None:
+            raise InvalidSyntaxError(token)
+        return result
 
     # E methods
     #
