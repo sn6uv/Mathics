@@ -60,6 +60,7 @@ PARSING_BENCHMARKS = [
     ";".join(map(str, range(1, DEPTH))),
     "/".join(map(str, range(1, DEPTH))),
     "^".join(map(str, range(1, DEPTH))),
+    "{" + DEPTH * "," + "}",    # messages
     "! " * DEPTH + 'expr',
     "!" * DEPTH + 'expr',
     'expr' + "& " * DEPTH,
