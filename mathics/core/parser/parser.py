@@ -24,6 +24,7 @@ class Parser(object):
         self.feeder = feeder
         self.tokeniser = Tokeniser(feeder)
         self.current_token = None
+        self.prev_token = None
         self.bracket_depth = 0
         self.box_depth = 0
         return self.parse_e()
@@ -42,6 +43,7 @@ class Parser(object):
             self.incomplete(token.pos)
 
     def consume(self):
+        self.prev_token = self.current_token
         self.current_token = None
 
     def incomplete(self, pos):
@@ -92,9 +94,21 @@ class Parser(object):
                 new_result = self.parse_postfix(result, token, p)
             elif tag not in self.halt_tags and flat_binary_ops['Times'] >= p:
                 # implicit times
+                assert self.prev_token is not None
+                bktwrn = (self.next().tag in ('RawLeftBrace', 'RawLeftParenthesis')) and self.prev_token.tag == 'Symbol'
+                pos0 = self.prev_token.pos
+                pos1 = self.next().pos
+
                 q = flat_binary_ops['Times']
                 child = self.parse_exp(q + 1)
                 new_result = Node('Times', result, child).flatten()
+
+                pos2 = self.tokeniser.pos - 1
+                if bktwrn:
+                    code1 = self.tokeniser.code[pos0:pos2]
+                    code2 = (self.tokeniser.code[pos0:pos1] + '[' +
+                             self.tokeniser.code[pos1+1:pos2-1] + ']')
+                    self.feeder.message('Syntax', 'bktwrn', code1, code2)
             else:
                 new_result = None
             if new_result is None:
