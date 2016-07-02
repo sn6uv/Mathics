@@ -145,10 +145,29 @@ class InverseCDF(Builtin):
 
 class NormalDistribution(_SympyDistribution):
     '''
+    <dl>
+    <dt>'NormalDistribution[$mu$, $sigma$]'
+      <dd>represents the normal distribution with mean $mu$ and standard deviation $sigma$.
+    <dt>'NormalDistribution[]'
+      <dd>represents the normal distribution with mean zero and standard deviation one.
+    </dl>
+
     >> CDF[NormalDistribution[mu, sigma]]
      = 1 / 2 + Erf[Sqrt[2] (-mu + #1) / (2 sigma)] / 2&
 
-    >> CDF[NormalDistribution[0, 1]]
+    >> PDF[NormalDistribution[0, 1]]
+     = Sqrt[2] Exp[-#1 ^ 2 / 2] / (2 Sqrt[Pi])&
+
+    >> Mean[NormalDistribution[mu, sigma]]
+     = mu
+
+    >> Variance[NormalDistribution[mu, sigma]]
+     = sigma ^ 2
+
+    >> Plot[PDF[NormalDistribution[], x], {x, -6, 6}, PlotRange->All]
+     = -Graphics-
+
+    #> CDF[NormalDistribution[0, 1]]
      = 1 - Erfc[Sqrt[2] #1 / 2] / 2&
     '''
 
