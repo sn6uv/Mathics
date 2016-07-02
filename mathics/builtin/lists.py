@@ -2634,6 +2634,9 @@ class Total(Builtin):
     Total over rows instead of columns
     >> Total[{{1, 2, 3}, {4, 5, 6}, {7, 8 ,9}}, {2}]
      = {6, 15, 24}
+
+    #> Total[f[x, y]]
+     = x + y
     """
     rules = {
         'Total[head_]': 'Apply[Plus, head]',
@@ -2721,10 +2724,13 @@ class Mean(Builtin):
 
     >> Mean[{a, b}]
      = (a + b) / 2
+
+    #> Mean[f[1]]
+     = Mean[f[1]]
     """
 
     rules = {
-        'Mean[list_]': 'Total[list] / Length[list]',
+        'Mean[list_List]': 'Total[list] / Length[list]',
     }
 
 
