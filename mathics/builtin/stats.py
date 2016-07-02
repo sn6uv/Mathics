@@ -195,6 +195,28 @@ class InverseCDF(Builtin):
         return from_sympy(result.simplify())
 
 
+class SurvivalFunction(Builtin):
+    '''
+    <dl>
+    <dt>'SurvivalFunction[$dist$, $x$]'
+      <dd>returns the survival function for the distribution $dist$ evaluated at $x$.
+    <dt>'SurvivalFunction[$dist$, {$x_1$, $x_2$, ...}]'
+      <dd>returns the survival function at '{$x_1$, $x_2$, ...}'.
+    <dt>'SurvivalFunction[$dist$]'
+      <dd>returns the survival function as a pure function.
+    </dl>
+
+    >> SurvivalFunction[NormalDistribution[0, 1], x]
+     = Erfc[Sqrt[2] x / 2] / 2
+    '''
+
+    rules = {
+        'SurvivalFunction[dist_]': '1 - CDF[dist]',
+        'SurvivalFunction[dist_, x_]': '1 - CDF[dist, x]',
+        'SurvivalFunction[dist_, xs_List]': '1 - CDF[dist, xs]',
+    }
+
+
 class NormalDistribution(_SympyDistribution):
     '''
     <dl>
