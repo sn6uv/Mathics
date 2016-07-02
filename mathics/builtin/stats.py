@@ -86,12 +86,28 @@ class _SympyDistribution(SympyFunction):
 
 class CDF(Builtin):
     '''
+    <dl>
+    <dt>'CDF[$dist$, $x$]'
+      <dd>returns the cumulative distribution for the distribution $dist$ at $x$.
+    <dt>'CDF[$dist$, {$x_1$, $x_2$, ...}]'
+      <dd>returns the CDF evaluated at '{$x_1$, $x_2$, ...}'.
+    <dt>'CDF[$dist$]'
+      <dd>returns the CDF as a pure function.
+    </dl>
+
+    >> CDF[NormalDistribution[mu, sigma], x]
+     = 1 / 2 + Erf[Sqrt[2] (-mu + x) / (2 sigma)] / 2
+
+    >> CDF[NormalDistribution[mu, sigma], {x, y}]
+     = {1 / 2 + Erf[Sqrt[2] (-mu + x) / (2 sigma)] / 2, 1 / 2 + Erf[Sqrt[2] (-mu + y) / (2 sigma)] / 2}
+
     >> CDF[NormalDistribution[mu, sigma]]
      = 1 / 2 + Erf[Sqrt[2] (-mu + #1) / (2 sigma)] / 2&
     '''
 
     rules = {
         'CDF[dist_, x_]': 'CDF[dist][x]',
+        'CDF[dist_, xs_List]': 'CDF[dist] /@ xs',
     }
 
     def apply(self, dist, evaluation):
@@ -106,12 +122,28 @@ class CDF(Builtin):
 
 class PDF(Builtin):
     '''
+    <dl>
+    <dt>'PDF[$dist$, $x$]'
+      <dd>returns the probability density function for the distribution $dist$ at $x$.
+    <dt>'PDF[$dist$, {$x_1$, $x_2$, ...}]'
+      <dd>returns the PDF evaluated at '{$x_1$, $x_2$, ...}'.
+    <dt>'PDF[$dist$]'
+      <dd>returns the PDF as a pure function.
+    </dl>
+
     >> PDF[NormalDistribution[0, 1], x]
      = Sqrt[2] E ^ (-x ^ 2 / 2) / (2 Sqrt[Pi])
+
+    >> PDF[NormalDistribution[0, 1]]
+     = Sqrt[2] Exp[-#1 ^ 2 / 2] / (2 Sqrt[Pi])&
+
+    >> PDF[NormalDistribution[0, 1], {x, y}]
+     = {Sqrt[2] E ^ (-x ^ 2 / 2) / (2 Sqrt[Pi]), Sqrt[2] E ^ (-y ^ 2 / 2) / (2 Sqrt[Pi])}
     '''
 
     rules = {
         'PDF[dist_, x_]': 'PDF[dist][x]',
+        'PDF[dist_, xs_List]': 'PDF[dist] /@ xs',
     }
 
     def apply(self, dist, evaluation):
@@ -128,9 +160,29 @@ class PDF(Builtin):
 
 class InverseCDF(Builtin):
     '''
+    <dl>
+    <dt>'InverseCDF[$dist$, $q$]'
+      <dd>returns the inverse cumulative distribution for the distribution $dist$ as a function of $q$.
+    <dt>'InverseCDF[$dist$, {$x_1$, $x_2$, ...}]'
+      <dd>returns the inverse CDF evaluated at '{$x_1$, $x_2$, ...}'.
+    <dt>'InverseCDF[$dist$]'
+      <dd>returns the inverse CDF as a pure function.
+    </dl>
+
+    >> InverseCDF[NormalDistribution[0, 1], x]
+     = Sqrt[2] InverseErfc[2 - 2 x]
+
+    >> InverseCDF[NormalDistribution[0, 1], {x, y}]
+     = {Sqrt[2] InverseErfc[2 - 2 x], Sqrt[2] InverseErfc[2 - 2 y]}
+
     >> InverseCDF[NormalDistribution[0, 1]]
      = Sqrt[2] InverseErfc[2 - 2 #1]&
     '''
+
+    rules = {
+        'InverseCDF[dist_, x_]': 'InverseCDF[dist][x]',
+        'InverseCDF[dist_, xs_List]': 'InverseCDF[dist] /@ xs',
+    }
 
     def apply(self, dist, evaluation):
         'InverseCDF[dist_]'
