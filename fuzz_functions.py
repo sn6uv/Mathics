@@ -24,6 +24,7 @@ def build_args(max_len=2):
         Symbol('Null'), Expression('DirectectedInfinity', Integer(1)),
         Symbol('Indeterminate'),
         Expression('Plus', Symbol('a'), Symbol('b')),
+        Expression('List', Symbol('a'), Symbol('b'), Symbol('c')),
     ]
 
     all_args = itertools.chain.from_iterable(
