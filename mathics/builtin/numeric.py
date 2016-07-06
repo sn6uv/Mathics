@@ -174,8 +174,9 @@ class MachinePrecision(Predefined):
     <dt>'MachinePrecision'
         <dd>is a "pessimistic" (integer) estimation of the internally used standard precision.
     </dl>
+
     >> N[MachinePrecision]
-     = 18.
+     = 15.954589770191
     """
 
     def apply_N(self, prec, evaluation):
@@ -183,7 +184,48 @@ class MachinePrecision(Predefined):
 
         prec = get_precision(prec, evaluation)
         if prec is not None:
-            return Real(dps(machine_precision), prec)
+            expr = Expression('Times', Integer(machine_precision), Expression('Log', Integer(10), Integer(2)))
+            return Expression('N', expr, dps(prec)).evaluate(evaluation)
+
+
+class MachineEpsilon_(Predefined):
+    '''
+    <dl>
+    <dt>'$MachineEpsilon'
+        <dd>is the distance between '1.0' and the next nearest representable machine-precision number.
+    </dl>
+
+    >> $MachineEpsilon
+     = 2.22044604925031*^-16
+
+    >> x = 1.0 + {0.4, 0.5, 0.6} $MachineEpsilon;
+    >> x - 1
+     = {0, 0, 2.22044604925031*^-16}
+    '''
+
+    name = '$MachineEpsilon'
+
+    def evaluate(self, evaluation):
+        return Real(2 ** (1 - machine_precision))
+
+
+class MachinePrecision_(Predefined):
+    '''
+    <dl>
+    <dt>'$MachinePrecision'
+        <dd>is the number of decimal digits of precision for machine-precision numbers.
+    </dl>
+
+    >> $MachinePrecision
+     = 15.954589770191
+    '''
+
+    name = '$MachinePrecision'
+
+    rules = {
+        '$MachinePrecision': 'N[MachinePrecision]',
+    }
+
 
 
 class Precision(Builtin):
