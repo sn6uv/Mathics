@@ -28,7 +28,7 @@ TIMEOUT = None
 MAX_RECURSION_DEPTH = 512
 
 # number of bits of precision for inexact calculations
-MACHINE_PRECISION = 64
+MACHINE_PRECISION = 53
 
 ADMINS = (
     ('Admin', 'mail@test.com'),
