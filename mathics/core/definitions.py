@@ -350,7 +350,7 @@ class Definitions(object):
 
     def add_format(self, name, rule, form=''):
         definition = self.get_user_definition(self.lookup_name(name))
-        if isinstance(form, tuple) or isinstance(form, list):
+        if isinstance(form, (tuple, list)) and not isinstance(form, Expression):
             forms = form
         else:
             forms = [form]

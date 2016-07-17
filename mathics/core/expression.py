@@ -8,6 +8,7 @@ import sympy
 import mpmath
 import re
 import abc
+from collections import namedtuple
 
 from mathics.core.numbers import get_type, dps, prec, min_prec
 from mathics.core.convert import sympy_symbol_prefix, SympyExpression
@@ -490,14 +491,19 @@ class Monomial(object):
         return 0
 
 
-class Expression(BaseExpression):
-    def __init__(self, head, *leaves, **kwargs):
-        super(Expression, self).__init__(**kwargs)
+_Expression = namedtuple('Expression', ['head', 'leaves'])
+
+
+class Expression(_Expression, BaseExpression):
+    def __new__(cls, head, *leaves, _leaves = None, **kwargs):
         if isinstance(head, six.string_types):
             head = Symbol(head)
-        self.head = head
-        self.leaves = [from_python(leaf) for leaf in leaves]
+        if _leaves is None:
+            _leaves = [from_python(leaf) for leaf in leaves]
+        return _Expression.__new__(cls, head, _leaves)
 
+    def __init__(self, head, *leaves, **kwargs):
+        super(Expression, self).__init__(**kwargs)
         self.parse_operator = kwargs.get('parse_operator')
         self.is_evaluated = False
 
@@ -512,8 +518,7 @@ class Expression(BaseExpression):
         # this is a minimal, shallow copy: head, leaves are shared with
         # the original, only the Expression instance is new. we transfer
         # the is_evaluated state, so we don't reevaluate evaluated stuff.
-        expr = Expression(self.head)
-        expr.leaves = self.leaves
+        expr = Expression(self.head, _leaves=self.leaves)
         expr.options = self.options
         expr.is_evaluated = self.is_evaluated
         return expr
@@ -871,7 +876,7 @@ class Expression(BaseExpression):
             self.head, ', '.join([six.text_type(leaf) for leaf in self.leaves]))
 
     def __repr__(self):
-        return '<Expression: %s>' % self
+        return '<Expression: %s>' % str(self)
 
     def process_style_box(self, options):
         if self.has_form('StyleBox', 1, None):

@@ -75,7 +75,7 @@ class Builtin(object):
                 # Handle adding 'System`' to a form name, unless it's
                 # '' (meaning the rule applies to all forms).
                 return '' if f == '' else ensure_context(f)
-            if isinstance(pattern, tuple):
+            if isinstance(pattern, tuple) and not isinstance(pattern, Expression):
                 forms, pattern = pattern
                 if isinstance(forms, six.string_types):
                     forms = [contextify_form_name(forms)]
