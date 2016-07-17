@@ -339,6 +339,7 @@ class SympyFunction(SympyObject):
         try:
             if self.sympy_name:
                 leaves = self.prepare_sympy(expr.leaves)
+                assert isinstance(leaves, list)
                 sympy_args = [leaf.to_sympy(**kwargs) for leaf in leaves]
                 if None in sympy_args:
                     return None

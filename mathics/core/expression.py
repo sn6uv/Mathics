@@ -494,16 +494,16 @@ class Monomial(object):
 _Expression = namedtuple('Expression', ['head', 'leaves'])
 
 
-class Expression(_Expression, BaseExpression):
-    def __new__(cls, head, *leaves, _leaves = None, **kwargs):
+class Expression(BaseExpression):
+    def __init__(self, head, *leaves, _leaves=None, **kwargs):
+        super(Expression, self).__init__(**kwargs)
         if isinstance(head, six.string_types):
             head = Symbol(head)
         if _leaves is None:
             _leaves = [from_python(leaf) for leaf in leaves]
-        return _Expression.__new__(cls, head, _leaves)
-
-    def __init__(self, head, *leaves, **kwargs):
-        super(Expression, self).__init__(**kwargs)
+        value = _Expression(head, _leaves)
+        self.head = value.head
+        self.leaves = value.leaves
         self.parse_operator = kwargs.get('parse_operator')
         self.is_evaluated = False
 

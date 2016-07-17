@@ -341,7 +341,9 @@ def walk_parts(list_of_list, indices, evaluation, assign_list=None):
                 if inner.is_atom():
                     evaluation.message('Part', 'partd')
                     return False
-                inner.leaves = inner.leaves[py_slice]
+                inner_leaves = inner.leaves[py_slice]
+                inner.leaves.clear()
+                inner.leaves.extend(inner_leaves)
                 inner.original = None
                 inner.set_positions()
             inner_list = join_lists(inner.leaves for inner in inner_list)
@@ -375,7 +377,8 @@ def walk_parts(list_of_list, indices, evaluation, assign_list=None):
                     except IndexError:
                         evaluation.message('Part', 'partw', index, inner)
                         return False
-                inner.leaves = new_leaves
+                inner.leaves.clear()
+                inner.leaves.extend(new_leaves)
                 inner.original = None
                 inner.set_positions()
             inner_list = join_lists(inner.leaves for inner in inner_list)
@@ -1135,7 +1138,9 @@ class Take(Builtin):
                     if stop is None:
                         stop = Symbol('Infinity')
                     return evaluation.message('Take', 'take', start, stop, inner)
-                inner.leaves = inner.leaves[py_slice]
+                inner_leaves = inner.leaves[py_slice]
+                inner.leaves.clear()
+                inner.leaves.extend(inner_leaves)
             inner_list = join_lists(inner.leaves for inner in inner_list)
 
         return list

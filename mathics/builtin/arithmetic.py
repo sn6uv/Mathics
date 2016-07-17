@@ -552,8 +552,9 @@ class Times(BinaryOperator, SympyFunction):
         if number == (1, 0):
             number = None
         elif number == (-1, 0) and leaves and leaves[0].has_form('Plus', None):
-            leaves[0].leaves = [Expression('Times', Integer(-1), leaf)
-                                for leaf in leaves[0].leaves]
+            new_leaves = (Expression('Times', Integer(-1), leaf) for leaf in leaves[0].leaves)
+            leaves[0].leaves.clear()
+            leaves[0].leaves.extend(new_leaves)
             number = None
 
         if number is not None:
@@ -1717,7 +1718,7 @@ class Piecewise(SympyFunction):
 
     def prepare_sympy(self, leaves):
         if len(leaves) == 1:
-            return leaves[0]
+            return [leaves[0]]
         if len(leaves) == 2:
             return leaves[0].leaves + [
                 Expression('List', leaves[1], Symbol('True'))]
