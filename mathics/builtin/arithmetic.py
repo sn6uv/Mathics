@@ -107,7 +107,7 @@ class _MPMathMultiFunction(_MPMathFunction):
             mpmath, self.mpmath_names, self.mpmath_name, leaves)
 
 
-class Plus(BinaryOperator, SympyFunction):
+class Plus(BinaryOperator, _MPMathFunction):
     """
     <dl>
     <dt>'Plus[$a$, $b$, ...]'</dt>
@@ -172,6 +172,10 @@ class Plus(BinaryOperator, SympyFunction):
     }
 
     sympy_name = 'Add'
+    mpmath_name = 'fsum'
+
+    def get_mpmath_function(self, args):
+        return lambda *args: getattr(mpmath, self.mpmath_name)(args)
 
     def format_plus(self, items, evaluation):
         'Plus[items__]'
@@ -216,88 +220,6 @@ class Plus(BinaryOperator, SympyFunction):
             ops.append(String(op))
         return Expression('Infix', Expression('List', *values),
                           Expression('List', *ops), 310, Symbol('Left'))
-
-    def apply(self, items, evaluation):
-        'Plus[items___]'
-
-        items = items.numerify(evaluation).get_sequence()
-        leaves = []
-        last_item = last_count = None
-
-        prec = min_prec(*items)
-        is_real = all([not isinstance(i, Complex) for i in items])
-
-        if prec is None:
-            number = (sympy.Integer(0), sympy.Integer(0))
-        else:
-            number = (
-                sympy.Float('0.0', dps(prec)),
-                sympy.Float('0.0', dps(prec)))
-
-        def append_last():
-            if last_item is not None:
-                if last_count == 1:
-                    leaves.append(last_item)
-                else:
-                    if last_item.has_form('Times', None):
-                        last_item.leaves.insert(0, Number.from_mp(last_count))
-                        leaves.append(last_item)
-                    else:
-                        leaves.append(Expression(
-                            'Times', Number.from_mp(last_count), last_item))
-
-        for item in items:
-            if isinstance(item, Number):
-                # TODO: Optimise this for the case of adding many real numbers
-                if isinstance(item, Complex):
-                    sym_real, sym_imag = item.real.to_sympy(
-                    ), item.imag.to_sympy()
-                else:
-                    sym_real, sym_imag = item.to_sympy(), sympy.Integer(0)
-
-                if prec is not None:
-                    sym_real = sym_real.n(dps(prec))
-                    sym_imag = sym_imag.n(dps(prec))
-
-                number = (number[0] + sym_real, number[1] + sym_imag)
-            else:
-                count = rest = None
-                if item.has_form('Times', None):
-                    for leaf in item.leaves:
-                        if isinstance(leaf, Number):
-                            count = leaf.to_sympy()
-                            rest = item.leaves[:]
-                            rest.remove(leaf)
-                            if len(rest) == 1:
-                                rest = rest[0]
-                            else:
-                                rest.sort()
-                                rest = Expression('Times', *rest)
-                            break
-                if count is None:
-                    count = sympy.Integer(1)
-                    rest = item
-                if last_item is not None and last_item == rest:
-                    last_count = add(last_count, count)
-                else:
-                    append_last()
-                    last_item = rest
-                    last_count = count
-        append_last()
-        if prec is not None or number != (0, 0):
-            if number[1].is_zero and is_real:
-                leaves.insert(0, Number.from_mp(number[0], prec))
-            elif number[1].is_zero and number[1].is_Integer and prec is None:
-                leaves.insert(0, Number.from_mp(number[0], prec))
-            else:
-                leaves.insert(0, Complex(number[0], number[1], prec))
-        if not leaves:
-            return Integer(0)
-        elif len(leaves) == 1:
-            return leaves[0]
-        else:
-            leaves.sort()
-            return Expression('Plus', *leaves)
 
 
 class Subtract(BinaryOperator):
@@ -378,7 +300,7 @@ def create_infix(items, operator, prec, grouping):
                           String(operator), prec, Symbol(grouping))
 
 
-class Times(BinaryOperator, SympyFunction):
+class Times(BinaryOperator, _MPMathFunction):
     """
     <dl>
     <dt>'Times[$a$, $b$, ...]'</dt>
@@ -452,12 +374,16 @@ class Times(BinaryOperator, SympyFunction):
     default_formats = False
 
     sympy_name = 'Mul'
+    mpmath_name = 'fprod'
 
     rules = {
     }
 
     formats = {
     }
+
+    def get_mpmath_function(self, args):
+        return lambda *args: getattr(mpmath, self.mpmath_name)(args)
 
     def format_times(self, items, evaluation, op='\u2062'):
         'Times[items__]'
@@ -523,76 +449,6 @@ class Times(BinaryOperator, SympyFunction):
     def format_outputform(self, items, evaluation):
         'OutputForm: Times[items__]'
         return self.format_times(items, evaluation, op=' ')
-
-    def apply(self, items, evaluation):
-        'Times[items___]'
-
-        # TODO: Clean this up and optimise it
-
-        items = items.numerify(evaluation).get_sequence()
-        number = (sympy.Integer(1), sympy.Integer(0))
-        leaves = []
-
-        prec = min_prec(*items)
-        is_real = all([not isinstance(i, Complex) for i in items])
-
-        for item in items:
-            if isinstance(item, Number):
-                if isinstance(item, Complex):
-                    sym_real, sym_imag = item.real.to_sympy(
-                    ), item.imag.to_sympy()
-                else:
-                    sym_real, sym_imag = item.to_sympy(), sympy.Integer(0)
-
-                if prec is not None:
-                    sym_real = sym_real.n(dps(prec))
-                    sym_imag = sym_imag.n(dps(prec))
-
-                if sym_real.is_zero and sym_imag.is_zero and prec is None:
-                    return Integer('0')
-                number = (
-                    number[0] * sym_real - number[1] * sym_imag,
-                    number[0] * sym_imag + number[1] * sym_real)
-            elif leaves and item == leaves[-1]:
-                leaves[-1] = Expression('Power', leaves[-1], Integer(2))
-            elif (leaves and item.has_form('Power', 2) and
-                  leaves[-1].has_form('Power', 2) and
-                  item.leaves[0].same(leaves[-1].leaves[0])):
-                leaves[-1].leaves[1] = Expression(
-                    'Plus', item.leaves[1], leaves[-1].leaves[1])
-            elif (leaves and item.has_form('Power', 2) and
-                  item.leaves[0].same(leaves[-1])):
-                leaves[-1] = Expression(
-                    'Power', leaves[-1],
-                    Expression('Plus', item.leaves[1], Integer(1)))
-            elif (leaves and leaves[-1].has_form('Power', 2) and
-                  leaves[-1].leaves[0].same(item)):
-                leaves[-1] = Expression('Power', item, Expression(
-                    'Plus', Integer(1), leaves[-1].leaves[1]))
-            else:
-                leaves.append(item)
-        if number == (1, 0):
-            number = None
-        elif number == (-1, 0) and leaves and leaves[0].has_form('Plus', None):
-            leaves[0].leaves = [Expression('Times', Integer(-1), leaf)
-                                for leaf in leaves[0].leaves]
-            number = None
-
-        if number is not None:
-            if number[1].is_zero and is_real:
-                leaves.insert(0, Number.from_mp(number[0], prec))
-            elif number[1].is_zero and number[1].is_Integer and prec is None:
-                leaves.insert(0, Number.from_mp(number[0], prec))
-            else:
-                leaves.insert(0, Complex(from_sympy(
-                    number[0]), from_sympy(number[1]), prec))
-
-        if not leaves:
-            return Integer(1)
-        elif len(leaves) == 1:
-            return leaves[0]
-        else:
-            return Expression('Times', *leaves)
 
 
 class Divide(BinaryOperator):
