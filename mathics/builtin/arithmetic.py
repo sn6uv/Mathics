@@ -174,6 +174,10 @@ class Plus(BinaryOperator, _MPMathFunction):
     sympy_name = 'Add'
     mpmath_name = 'fsum'
 
+    rules = {
+        'Plus[]': '0',
+    }
+
     def get_mpmath_function(self, args):
         return lambda *args: getattr(mpmath, self.mpmath_name)(args)
 
@@ -377,6 +381,7 @@ class Times(BinaryOperator, _MPMathFunction):
     mpmath_name = 'fprod'
 
     rules = {
+        'Times[]': '1',
     }
 
     formats = {
