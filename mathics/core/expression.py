@@ -319,6 +319,9 @@ class BaseExpression(KeyComparable):
     def is_inexact(self):
         return self.get_precision() is not None
 
+    def is_zero(self):
+        return False
+
     def get_precision(self):
         return None
 
@@ -1541,6 +1544,9 @@ class Integer(Number):
     def user_hash(self, update):
         update(b'System`Integer>' + str(self.value).encode('utf8'))
 
+    def is_zero(self):
+        return self.value == 0
+
 
 class Rational(Number):
     def __init__(self, numerator, denominator=None, **kwargs):
@@ -1722,6 +1728,9 @@ class Real(Number):
         # ignore last 7 binary digits when hashing
         _prec = self.get_precision()
         update(b'System`Real>' + str(self.to_sympy().n(dps(_prec))).encode('utf8'))
+
+    def is_zero(self):
+        return self.value == 0
 
 
 class Complex(Number):

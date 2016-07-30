@@ -225,6 +225,30 @@ class Plus(BinaryOperator, _MPMathFunction):
         return Expression('Infix', Expression('List', *values),
                           Expression('List', *ops), 310, Symbol('Left'))
 
+    def apply_check(self, items, evaluation):
+        'Plus[items__]'
+
+        items = items.get_sequence()
+
+        is_complex = any(isinstance(item, Complex) for item in items)
+        is_exact = not any(item.is_inexact() for item in items)
+        prec = min_prec(*items)
+
+        result = self.apply(Expression('Sequence', *items), evaluation)
+        if result is None or result == Symbol('Null'):
+            return
+
+        if result.is_zero() and prec is not None:
+            if is_exact:
+                return Integer(0)
+            if is_complex:
+                return Complex(Real(0, prec), Real(0, prec))
+            else:
+                return Real(0, prec)
+        if is_complex and isinstance(result, Real):
+            result = Complex(result, Real(0, result.get_precision()))
+        return result
+
 
 class Subtract(BinaryOperator):
     """
@@ -454,6 +478,28 @@ class Times(BinaryOperator, _MPMathFunction):
     def format_outputform(self, items, evaluation):
         'OutputForm: Times[items__]'
         return self.format_times(items, evaluation, op=' ')
+
+    def apply_check(self, items, evaluation):
+        'Times[items__]'
+
+        items = items.get_sequence()
+
+        is_complex = any(isinstance(item, Complex) for item in items)
+        is_exact = not any(item.is_inexact() for item in items)
+        prec = min_prec(*items)
+
+        for item in items:
+            if isinstance(item, Number) and item.is_zero():
+                if is_exact:
+                    return Integer(0)
+                if is_complex:
+                    return Complex(Real(0, prec), Real(0, prec))
+                else:
+                    return Real(0, prec)
+
+        result = self.apply(Expression('Sequence', *items), evaluation)
+        if result is None or result != Symbol('Null'):
+            return result
 
 
 class Divide(BinaryOperator):

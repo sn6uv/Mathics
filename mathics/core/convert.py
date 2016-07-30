@@ -167,7 +167,11 @@ def from_sympy(expr):
             return Symbol(six.text_type(expr))
     elif expr.is_number and all([x.is_Number for x in expr.as_real_imag()]):
         # Hack to convert 3 * I to Complex[0, 3]
-        return Complex(*[from_sympy(arg) for arg in expr.as_real_imag()])
+        real, imag = expr.as_real_imag()
+        if imag == 0:
+            return from_sympy(real)
+        else:
+            return Complex(from_sympy(real), from_sympy(imag))
     elif expr.is_Add:
         return Expression('Plus', *sorted([
             from_sympy(arg) for arg in expr.args]))
