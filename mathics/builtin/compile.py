@@ -14,7 +14,6 @@ class RealArgument(Argument):
     pass
 
 
-
 class Register(object):
     def __init__(self):
         self.value = None
@@ -33,6 +32,7 @@ class OpCode(object):
 
     def line(self):
         return '[???]'
+
 
 class Return(OpCode):
     def __init__(self):
@@ -61,15 +61,14 @@ class SetConst(OpCode):
 
 
 class SetResult(OpCode):
-    nargs = 0
     def __init__(self, result):
         self.result = result
 
     def line(self):
         return 'Result = I{}'.format(self.result.index)
 
+
 class _RegularOpCode(OpCode):
-    nargs = 1
     def __init__(self, result, *args):
         self.result = result
         self.args = args
@@ -77,6 +76,7 @@ class _RegularOpCode(OpCode):
     @staticmethod
     def call(*args):
         return
+
 
 class Add(_RegularOpCode):
     @staticmethod
@@ -129,18 +129,17 @@ class Compile(object):
             else:
                 # TODO Compile:ctyp2
                 raise ValueError('Unknown argument type %s' % t)
-        return result
 
         # check for duplicate arguments
         name_counts = {}
-        for arg in args:
-            name_counts[arg.name] = name_count.get(arg.name, 0) + 1
+        for arg in result:
+            name_counts[arg.name] = name_counts.get(arg.name, 0) + 1
         for name, count in name_counts.items():
             if count > 1:
                 # TODO Compile:fdup
                 raise ValueError('argument %s is repeated' % name)
 
-        return args
+        return result
 
     def do_compile(self, sub_expr):
         if isinstance(sub_expr, Integer):
@@ -183,13 +182,12 @@ class Compile(object):
             else:
                 raise NotImplementedError()
 
-    def print(self):
+    def debug_print(self):
         print('    %i arguments' % len(self.args))
         print('    %i integer registers' % len(self.int_registers))
         print()
         for i, op in enumerate(self.body):
             print('%2i %s' % (i, op.line()))
-
 
     def enumerate_registers_and_args(self):
         for i, reg in enumerate(self.int_registers):
