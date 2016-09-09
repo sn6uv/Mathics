@@ -96,6 +96,15 @@ class Times(_RegularOpCode):
         return 'I{} = I{} * I{}'.format(self.result.index, self.args[0].index, self.args[1].index)
 
 
+class Power(_RegularOpCode):
+    @staticmethod
+    def call(arg1, arg2):
+        return arg1 ** arg2
+
+    def line(self):
+        return 'I{} = I{} ^ I{}'.format(self.result.index, self.args[0].index, self.args[1].index)
+
+
 class Compile(object):
     def __init__(self, args, expr):
         self.args = self.check_args(args)
@@ -157,14 +166,22 @@ class Compile(object):
                 right = self.do_compile(right)
                 self.body.append(Add(reg, left, right))
                 return reg
-            if sub_expr.has_form('Times', 2):
+            elif sub_expr.has_form('Times', 2):
                 reg = self.allocate_int_register()
                 left, right = sub_expr.get_leaves()
                 left = self.do_compile(left)
                 right = self.do_compile(right)
                 self.body.append(Times(reg, left, right))
                 return reg
-            raise NotImplementedError()
+            elif sub_expr.has_form('Power', 2):
+                reg = self.allocate_int_register()
+                left, right = sub_expr.get_leaves()
+                left = self.do_compile(left)
+                right = self.do_compile(right)
+                self.body.append(Power(reg, left, right))
+                return reg
+            else:
+                raise NotImplementedError()
 
     def print(self):
         print('    %i arguments' % len(self.args))
@@ -182,18 +199,19 @@ class Compile(object):
             arg.index = i
 
     def __call__(self, *args):
-        # check args are correct
-        # number of args
+        # check number of args
         if len(args) != len(self.args):
             raise ValueError()
-        # typecheck
+
+        # typecheck args
         for garg, earg in zip(args, self.args):
             if False:   # TODO
                 raise ValueError()
 
-        # create registers
+        # initialise registers
         regs = [None for reg in self.int_registers]
 
+        # register index of result
         result_index = None
 
         # run body
@@ -210,31 +228,25 @@ class Compile(object):
                 rargs = [regs[arg.index] for arg in op.args]
                 regs[op.result.index] = op.call(*rargs)
 
-        # extract result
-        result = regs[result_index]
-        return result
+        # return result
+        return regs[result_index]
 
 
-sep = '-' * 80
-
+# Tests
 cf = Compile([], Integer(1))
-cf.print()
-print(cf())
+assert cf() == 1
 
 cf = Compile([('x', 'int')], Integer(1))
-cf.print()
-print(cf(1))
+assert cf(1) == 1
 
 cf = Compile([('x', 'int')], Symbol('x'))
-cf.print()
-print(cf(2))
+assert cf(5) == 5
 
-print(sep)
 cf = Compile([('x', 'int')], Expression('Plus', Symbol('x'), Integer(1)))
-cf.print()
-print(cf(2))
+assert cf(5) == 6
 
-print(sep)
 cf = Compile([('x', 'int'), ('y', 'int')], Expression('Times', Integer(5), Expression('Plus', Symbol('x'), Symbol('y'))))
-cf.print()
-print(cf(2, 3))
+assert cf(2, 3) == 25
+
+cf = Compile([('x', 'int')], Expression('Power', Symbol('x'), Integer(5)))
+assert cf(2) == 32
