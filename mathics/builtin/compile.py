@@ -69,9 +69,10 @@ class SetResult(OpCode):
 
 
 class _RegularOpCode(OpCode):
-    def __init__(self, result, *args):
+    def __init__(self, result, *args, label=None):
         self.result = result
         self.args = args
+        self.label = label
 
     @staticmethod
     def call(*args):
@@ -103,6 +104,15 @@ class Power(_RegularOpCode):
 
     def line(self):
         return 'I{} = I{} ^ I{}'.format(self.result.index, self.args[0].index, self.args[1].index)
+
+
+class CastIntToReal(_RegularOpCode):
+    @staticmethod
+    def call(arg1):
+        return float(arg1)
+
+    def line(self):
+        return 'R{} = I{}'.format(self.result.index, self.args[0].index)
 
 
 class Compile(object):
@@ -190,6 +200,7 @@ class Compile(object):
             print('%2i %s' % (i, op.line()))
 
     def enumerate_registers_and_args(self):
+        # TODO order registers by use order
         for i, reg in enumerate(self.int_registers):
             reg.index = i
 
