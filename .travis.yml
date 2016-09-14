@@ -40,13 +40,18 @@ matrix:
     - env: SYMPY_SRC=master CYTHON="false"
     - env: DOC="true" CYTHON="false"
     - env: PYPY_NUMPY="true"
+addons:
+  apt:
+    packages:
+    - asymptote
+    - imagemagick
+    - texlive-latex-extra
+    - texlive-latex3
+    - texlive-fonts-recommended
+    - latexmk
 before_install:
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
-  - if [[ "$DOC" == "true" ]]; then
-      sudo apt-get update -qq &&
-      sudo apt-get install -qq asymptote imagemagick texlive-latex-extra texlive-latex3 texlive-fonts-recommended latexmk;
-    fi
   - if [[ "$CYTHON" == "true" ]]; then
       pip install cython;
     fi
@@ -71,3 +76,4 @@ script:
 notifications:
     email: false
     slack: mathics:VIjdkcZPlA79sOtVOtyjdOcT
+sudo: false
