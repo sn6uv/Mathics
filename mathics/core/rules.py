@@ -20,10 +20,6 @@ class BaseRule(KeyComparable):
     def apply(self, expression, evaluation, fully=True, return_list=False,
               max_list=None):
         result_list = []
-        # count = 0
-
-        if return_list and max_list is not None and max_list <= 0:
-            return []
 
         def yield_match(vars, rest):
             if rest is None:
