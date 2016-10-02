@@ -62,7 +62,7 @@ before_install:
       sudo apt-get update -qq &&
       sudo apt-get install -qq python-enchant &&
       pip install enum34 &&
-      LLVM_CONFIG="llvm-config-3.8" pip install llvmlite &&
+      LLVM_CONFIG="llvm-config-3.8" CC="/usr/bin/gcc-5" CXX="/usr/bin/g++-5" pip install llvmlite &&
       pip install numpy wordcloud ipywidgets ipykernel IPython nltk langid pycountry pyenchant lxml matplotlib networkx &&
       if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
           pip install pattern;
