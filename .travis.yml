@@ -40,7 +40,7 @@ matrix:
     - python: 3.2
     - python: pypy3
     - env: SYMPY_SRC=master
-    - env: DOC="true"
+      env: DOC="true" ALL_MODULES="true"
 before_install:
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
