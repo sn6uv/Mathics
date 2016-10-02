@@ -47,8 +47,6 @@ before_install:
   - if [[ "$ALL_MODULES" == "true" ]]; then
       sudo apt-get update -qq &&
       sudo apt-get install -qq python-enchant &&
-      sudo add-apt-repository ppa:adrozdoff/llvm-backport -y &&
-      sudo apt-get update -q &&
       sudo apt-get install llvm-3.8 llvm-3.8-dev libedit-dev -y &&
       pip install llvmlite &&
       pip install numpy wordcloud ipywidgets ipykernel IPython nltk langid pycountry pyenchant lxml matplotlib networkx &&
