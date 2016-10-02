@@ -45,11 +45,14 @@ before_install:
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
   - if [[ "$ALL_MODULES" == "true" ]]; then
+      sudo add-apt-repository ppa:ubuntu-toolchain-r/test &&
+      sudo apt-get update -qq &&
+      sudo apt-get libc++-dev &&
       wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - &&
       sudo apt-add-repository "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.8 main" &&
       sudo apt-get update -qq &&
       sudo apt-get install -qq python-enchant &&
-      sudo apt-get install llvm-3.8 llvm-3.8-dev libllvm3.8 llvm-3.8-runtime libc++-dev libedit-dev -y &&
+      sudo apt-get install llvm-3.8 llvm-3.8-dev libllvm3.8 llvm-3.8-runtime libedit-dev -y &&
       pip install llvmlite &&
       pip install numpy wordcloud ipywidgets ipykernel IPython nltk langid pycountry pyenchant lxml matplotlib networkx &&
       if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
