@@ -57,6 +57,8 @@ before_install:
   - "sh -e /etc/init.d/xvfb start"
   - if [[ "$ALL_MODULES" == "true" ]]; then
       sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 100 &&
+      sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100 &&
+      sudo update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-3.8 100 &&
       sudo apt-get update -qq &&
       sudo apt-get install -qq python-enchant &&
       pip install enum34 &&
