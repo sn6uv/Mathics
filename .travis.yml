@@ -51,7 +51,7 @@ before_install:
       sudo apt-get install -qq python-enchant &&
       sudo add-apt-repository ppa:adrozdoff/llvm-backport -y &&
       sudo apt-get update -q &&
-      sudo apt-get install llvm-toolchain-3.8 -y &&
+      sudo apt-get install llvm-3.8 llvm-3.8-dev -y &&
       pip install llvmlite &&
       pip install numpy wordcloud ipywidgets ipykernel IPython nltk langid pycountry pyenchant lxml matplotlib networkx &&
       if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
