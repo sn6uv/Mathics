@@ -49,21 +49,21 @@ addons:
     packages:
     - llvm-3.8
     - llvm-3.8-dev
-    - gcc-6.2
-    - g++-6.2
+    - gcc-6
+    - g++-6
     - clang-3.8
     - libstdc++5
 before_install:
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
   - if [[ "$ALL_MODULES" == "true" ]]; then
-      sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6.2 100 &&
-      sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6.2 100 &&
+      sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 100 &&
+      sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 100 &&
       sudo update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-3.8 100 &&
       sudo apt-get update -qq &&
       sudo apt-get install -qq python-enchant &&
       pip install enum34 &&
-      LLVM_CONFIG="llvm-config-3.8" CC="/usr/bin/gcc-6.2" CXX="/usr/bin/g++-6" pip install llvmlite &&
+      LLVM_CONFIG="llvm-config-3.8" CC="/usr/bin/gcc-6" CXX="/usr/bin/g++-6" pip install llvmlite &&
       pip install numpy wordcloud ipywidgets ipykernel IPython nltk langid pycountry pyenchant lxml matplotlib networkx &&
       if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then
           pip install pattern;
