@@ -188,8 +188,25 @@ def solve(slots, args):
             j = 0
             while j < len(assignments) and assignments[-(j+1)] == i:
                 j += 1
-    # print(assignments)
+
+    # all args are assigned sucessfully
     assert sorted(assignments) == assignments
+    assert len(assignments) == len(args)
+    assert all(slots[si].match_single(args[ai]) for ai, si in enumerate(assignments))
+
+    # check remaining slots are satisfied
+    while i < len(slots):
+        if slots[i].min_capacity > j:
+            return None
+        j = 0
+        i += 1
+
+    # all slots satisfied
+    for i, slot in enumerate(slots):
+        n = sum(1 for assignment in assignments if assignment == i)
+        assert slot.min_capacity <= n
+        assert slot.max_capacity is None or slot.max_capacity >= n
+
     return assignments
 
 
@@ -230,6 +247,10 @@ tests = [
     ('f[1, 2, 3]', 'f[__, ___]', [0, 1, 1]),
     ('f[1, 2, 3]', 'f[___, ___]', [1, 1, 1]),
     ('f[1, 2, 3]', 'f[__, _, __]', [0, 1, 2]),
+    ('f[1]', 'f[_Integer]', [0]),
+    ('f[1]', 'f[_String]', None),
+    ('f[a, b, 1, c]', 'f[__, _Integer, __]', [0, 0, 1, 2]),
+    ('f[1, b, 1, c]', 'f[___, _Integer, _Integer, ___]', None),
 ]
 
 
