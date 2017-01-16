@@ -1,33 +1,6 @@
 from __future__ import print_function
 
 
-class MatchObject(object):
-    def __init__(self, expr, groups=None):
-        self.expr = expr
-
-        if groups is None:
-            self.groups = {}
-        else:
-            self.groups = groups
-
-    def __repr__(self):
-        return '<MatchObject(expr=%s, groups=%s)>' % (self.expr, self.groups)
-
-
-def subs_named(named, expr):
-    '''
-    Substitutes named patterns in expr.
-    '''
-    if expr.is_symbol():
-        return named.get(expr.get_name(), expr)
-    elif expr.is_atom():
-        return expr
-    else:
-        new_head = subs_named(named, expr.get_head())
-        new_leaves = [subs_named(named, leaf) for leaf in expr.leaves]
-        return Expression(new_head, *new_leaves)
-
-
 class PatternCompilationError(Exception):
     def __init__(self, tag, name, *args):
         self.tag = tag
@@ -121,6 +94,13 @@ def sum_capacity(patts):
 
 
 def match_expr(expr, patt):
+    '''
+    Matches the arguments of two expressions.
+
+    e.g. Does f[1, 2] match f[_, _Integer]?
+
+    returns a list of integers
+    '''
     assert expr.get_head() is not None
     assert patt.get_head() is not None
     assert expr.get_head().same(patt.get_head())
@@ -138,7 +118,7 @@ def match_expr(expr, patt):
     # compile leaves
     slots = [compile_patt(leaf) for leaf in patt.leaves]
 
-    # find the matching generator
+    # find the appropriate matching generator
     if not is_orderless and not is_flat:
         gen = gen_ordered_flatless(slots, expr.leaves)
     elif is_orderless and not is_flat:
@@ -168,10 +148,7 @@ def gen_ordered_flatless(slots, args):
     '''
     if len(slots) == 1:
         slot = slots[0]
-        if (slot.min_args <= len(args) and
-            (slot.max_args is None or len(args) <= slot.max_args) and
-            slot.match(*args)):
-
+        if slot.min_args <= len(args) and (slot.max_args is None or len(args) <= slot.max_args) and slot.match(*args):
             yield [args]
     elif len(slots) > 1:
         slot = slots[0]
@@ -200,6 +177,8 @@ def gen_ordered_flat(slots, args):
 def gen_orderless_flat(slots, args):
     raise NotImplementedError
 
+
+from time import time
 
 from mathics.core.parser import parse, SingleLineFeeder
 from mathics.core.definitions import Definitions
@@ -241,11 +220,18 @@ tests = [
     ('f[1]', 'f[_, ___, _]', None),
 ]
 
+tests = [(_parse(expr), _parse(patt), result) for expr, patt, result in tests]
+
 
 for expr, patt, result in tests:
-    expr = _parse(expr)
-    patt = _parse(patt)
-
     got = match_expr(expr, patt)
     if result != got:
         print('match_expr(%s, %s) = %s, expected %s' % (expr, patt, got, result))
+
+stime = time()
+for _ in range(10000):
+    for expr, patt, result in tests:
+        match_expr(expr, patt)
+ftime = time()
+
+print('duration: %.5f' % (ftime - stime))
