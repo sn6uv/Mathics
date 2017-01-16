@@ -134,6 +134,14 @@ def compile_patt(patt, names):
         return ExpressionPattern(patt)
 
 
+def check_len_args(slot, args):
+    if slot.min_args > len(args):
+        return False
+    if slot.max_args is not None and len(args) > slot.max_args:
+        return False
+    return True
+
+
 def match_expr(expr, patt):
     '''
     Matches the arguments of two expressions.
@@ -192,7 +200,7 @@ def gen_ordered_flatless(slots, args):
     '''
     if len(slots) == 1:
         slot = slots[0]
-        if slot.min_args <= len(args) and (slot.max_args is None or len(args) <= slot.max_args) and slot.match(*args):
+        if check_len_args(slot, args) and slot.match(*args):
             yield [args]
             slot.unmatch(*args)
     elif len(slots) > 1:
