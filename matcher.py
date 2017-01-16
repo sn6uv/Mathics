@@ -14,18 +14,11 @@ class CompiledPattern(object):
 
     def match(self, *exprs):
         '''
-        Does the pattern match the tuple of expressions, exprs?
-        Tracks named variables if they match.
+        Generates None as the pattern matches the tuple of expressions, exprs.
+        Tracks named variables as they match.
         returns bool: True if the exprs match and False otherwise.
         '''
         raise NotImplementedError
-
-    def unmatch(self, *args):
-        '''
-        Untracks named variables.
-        returns None.
-        '''
-        pass
 
 
 class _BlankPattern(CompiledPattern):
@@ -44,7 +37,8 @@ class BlankPattern(_BlankPattern):
     max_args = 1
 
     def match(self, expr):
-        return self.expr is None or self.expr.same(expr.get_head())
+        if self.expr is None or self.expr.same(expr.get_head()):
+            yield None
 
 
 class BlankSequencePattern(_BlankPattern):
@@ -52,7 +46,8 @@ class BlankSequencePattern(_BlankPattern):
     max_args = None
 
     def match(self, *exprs):
-        return self.expr is None or all(self.expr.same(expr.get_head()) for expr in exprs)
+        if self.expr is None or all(self.expr.same(expr.get_head()) for expr in exprs):
+            yield None
 
 
 class BlankNullSequencePattern(_BlankPattern):
@@ -60,7 +55,8 @@ class BlankNullSequencePattern(_BlankPattern):
     max_args = None
 
     def match(self, *exprs):
-        return self.expr is None or all(self.expr.same(expr.get_head()) for expr in exprs)
+        if self.expr is None or all(self.expr.same(expr.get_head()) for expr in exprs):
+            yield None
 
 
 class PatternPattern(CompiledPattern):
@@ -80,27 +76,18 @@ class PatternPattern(CompiledPattern):
             raise PatternCompilationError('Pattern', 'argx', 'Pattern', n, 2)
 
     def match(self, *exprs):
-        if self.sub_patt.match(*exprs):
+        for _ in self.sub_patt.match(*exprs):
             count, known_exprs = self.names.get(self.name, (0, None))
             assert count >= 0
             if count > 0:
                 # check equality with known_exprs
                 if len(known_exprs) != len(exprs):
-                    return False
+                    continue
                 if not all(known_expr.same(expr) for known_expr, expr in zip(known_exprs, exprs)):
-                    return False
+                    continue
             self.names[self.name] = (count + 1, exprs)
-            return True
-        return False
-
-    def unmatch(self, *args):
-        count, known_args = self.names[self.name]
-        assert count >= 1
-        if count == 1:
-            del self.names[self.name]
-        else:
-            self.names[self.name] = (count - 1, args)
-        self.sub_patt.unmatch(*args)
+            yield None
+            self.names[self.name] = (count, exprs)
 
 
 class AlternativesPattern(CompiledPattern):
@@ -130,14 +117,9 @@ class AlternativesPattern(CompiledPattern):
 
     def match(self, *exprs):
         for i, sub_patt in enumerate(self.sub_patts):
-            if check_len_args(sub_patt, exprs) and sub_patt.match(*exprs):
-                self.match_index = i
-                return True
-        return False
-
-    def unmatch(self, *exprs):
-        self.sub_patts[self.match_index].unmatch(*exprs)
-        self.match_index = None
+            if check_len_args(sub_patt, exprs):
+                for _ in sub_patt.match(*exprs):
+                    yield None
 
 
 class ExpressionPattern(CompiledPattern):
@@ -150,20 +132,17 @@ class ExpressionPattern(CompiledPattern):
     def __init__(self, patt, names):
         self.expr = patt
         self.names = names
-        self.old_names = None
 
     def match(self, expr):
         if self.expr.is_atom() and expr.is_atom():
-            return self.expr.same(expr)
+            if self.expr.same(expr):
+                yield None
         elif not self.expr.is_atom() and not expr.is_atom():
-            self.old_names = self.names.copy()
-            return match_expr(expr, self.expr, self.names)
-        return False
-
-    def unmatch(self, expr):
-        self.names.clear()
-        self.names.update(self.old_names)
-        self.old_names = None
+            old_names = self.names.copy()
+            for _ in match_expr(expr, self.expr, self.names):
+                yield None
+                self.names.clear()
+                self.names.update(old_names)
 
 
 def compile_patt(patt, names):
@@ -198,7 +177,7 @@ def match_expr(expr, patt, names=None):
     :expr Expression: expression to match.
     :patt Expression: pattern against which to match.
     :names dict: predefined named match variables.
-    :returns (list, dict): match positions for each argument and named matches.
+    :yields (list, dict): match positions for each argument and named matches.
     '''
     assert expr.get_head() is not None
     assert patt.get_head() is not None
@@ -209,7 +188,8 @@ def match_expr(expr, patt, names=None):
 
     # empty case
     if not expr.leaves and not patt.leaves:
-        return [], names
+        yield [], names
+        return
 
     head = expr.get_head()
 
@@ -230,18 +210,15 @@ def match_expr(expr, patt, names=None):
     elif is_orderless and is_flat:
         gen = gen_orderless_flatless(slots, expr.leaves)
 
-    # look for the first match
-    try:
-        match = next(gen)
-    except StopIteration:
-        return None, names
-
-    # rewrite match as a list of slot indices
-    assignments = []
-    for j, slot in enumerate(match):
-        for arg in slot:
-            assignments.append(j)
-    return assignments, names
+    # look for matches
+    for match in gen:
+        # rewrite match as a list of slot indices
+        assignments = []
+        for j, slot in enumerate(match):
+            for arg in slot:
+                assignments.append(j)
+        yield assignments, names
+    return
 
 
 def gen_ordered_flatless(slots, args):
@@ -250,9 +227,9 @@ def gen_ordered_flatless(slots, args):
     '''
     if len(slots) == 1:
         slot = slots[0]
-        if check_len_args(slot, args) and slot.match(*args):
-            yield [args]
-            slot.unmatch(*args)
+        if check_len_args(slot, args):
+            for _ in slot.match(*args):
+                yield [args]
     elif len(slots) > 1:
         slot = slots[0]
         start = slot.min_args
@@ -263,11 +240,9 @@ def gen_ordered_flatless(slots, args):
             end = len(args) + 1
         assert start <= end
         for i in range(start, end):
-            if not slot.match(*args[:i]):
-                continue
-            for right in gen_ordered_flatless(slots[1:], args[i:]):
-                yield [args[:i]] + right
-            slot.unmatch(*args[:i])
+            for _ in slot.match(*args[:i]):
+                for right in gen_ordered_flatless(slots[1:], args[i:]):
+                    yield [args[:i]] + right
 
 
 def gen_orderless_flatless(slots, args):
@@ -338,6 +313,7 @@ _tests = [
     ('f[f[1]]', 'f[f[x_]]', [0], {'x': (1, '1')}),
     ('f[f[1], 1]', 'f[f[x_], x_]', [0, 1], {'x': (2, '1')}),
     ('f[f[1], 2]', 'f[f[x_], x_]', None),
+    ('f[f[1], 2]', 'f[f[x_]|y_, x_]', [0, 1], {'x': (1, '2'), 'y': (1, 'f[1]')}),
 ]
 
 
@@ -354,14 +330,19 @@ for test in _tests:
 
 
 for expr, patt, result in tests:
-    got = match_expr(expr, patt)
+    try:
+        got = next(match_expr(expr, patt))
+    except StopIteration:
+        got = None, {}
+
     if result != got:
         print('match_expr(%s, %s) = %s, expected %s' % (expr, patt, got, result))
 
 stime = time()
 for _ in range(1000):
     for expr, patt, result in tests:
-        match_expr(expr, patt)
+        for _ in match_expr(expr, patt):
+            pass
 ftime = time()
 
 print('duration: %.5f' % (ftime - stime))
