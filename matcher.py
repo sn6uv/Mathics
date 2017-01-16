@@ -22,6 +22,7 @@ class CompiledPattern(object):
 
 
 class _BlankPattern(CompiledPattern):
+
     def __init__(self, patt):
         n = len(patt.leaves)
         if n == 0:
@@ -60,6 +61,7 @@ class BlankNullSequencePattern(_BlankPattern):
 
 
 class PatternPattern(CompiledPattern):
+
     def __init__(self, patt, names):
         n = len(patt.leaves)
         if n == 2:
@@ -105,6 +107,7 @@ class AlternativesPattern(CompiledPattern):
 
     This behaviour is acheived by implementing in the naive way.
     '''
+
     def __init__(self, patt, names):
         sub_patts = [compile_patt(leaf, names) for leaf in patt.leaves]
         self.min_args = min(sub_patt.min_args for sub_patt in sub_patts)
@@ -112,12 +115,11 @@ class AlternativesPattern(CompiledPattern):
             self.max_args = None
         else:
             self.max_args = max(sub_patt.max_args for sub_patt in sub_patts)
-        self.match_index = None
         self.sub_patts = sub_patts
 
     def match(self, *exprs):
         for i, sub_patt in enumerate(self.sub_patts):
-            if check_len_args(sub_patt, exprs):
+            if sub_patt.min_args <= len(exprs) and (sub_patt.max_args is None or len(exprs) <= sub_patt.max_args):
                 for _ in sub_patt.match(*exprs):
                     yield None
 
@@ -158,14 +160,6 @@ def compile_patt(patt, names):
         return AlternativesPattern(patt, names)
     else:
         return ExpressionPattern(patt, names)
-
-
-def check_len_args(slot, args):
-    if slot.min_args > len(args):
-        return False
-    if slot.max_args is not None and len(args) > slot.max_args:
-        return False
-    return True
 
 
 def match_expr(expr, patt, names=None):
@@ -227,7 +221,7 @@ def gen_ordered_flatless(slots, args):
     '''
     if len(slots) == 1:
         slot = slots[0]
-        if check_len_args(slot, args):
+        if slot.min_args <= len(args) and (slot.max_args is None or len(args) <= slot.max_args):
             for _ in slot.match(*args):
                 yield [args]
     elif len(slots) > 1:
