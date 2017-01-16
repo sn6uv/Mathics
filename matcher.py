@@ -36,10 +36,10 @@ class PatternCompilationError(Exception):
 
 
 class CompiledPattern(object):
-    min_args = None
-    max_args = None
+    min_args = 1
+    max_args = 1
 
-    def match_single(self):
+    def match(self):
         raise NotImplementedError
 
 
@@ -53,34 +53,42 @@ class _BlankPattern(CompiledPattern):
         else:
             raise PatternCompilationError(patt.get_head_name(), 'argt', 'Blank', n, 0, 1)
 
-    def match_single(self, expr):
-        return self.expr is None or self.expr.same(expr.get_head())
-
 
 class BlankPattern(_BlankPattern):
     min_args = 1
     max_args = 1
+
+    def match(self, expr):
+        return self.expr is None or self.expr.same(expr.get_head())
 
 
 class BlankSequencePattern(_BlankPattern):
     min_args = 1
     max_args = None
 
+    def match(self, *exprs):
+        return self.expr is None or all(self.expr.same(expr.get_head()) for expr in exprs)
+
 
 class BlankNullSequencePattern(_BlankPattern):
     min_args = 0
     max_args = None
+
+    def match(self, *exprs):
+        return self.expr is None or all(self.expr.same(expr.get_head()) for expr in exprs)
 
 
 class ExpressionPattern(CompiledPattern):
     '''
     Represents a raw expression.
     '''
+    min_args = 1
+    max_args = 1
 
     def __init__(self, patt):
         self.expr = patt
 
-    def match_single(self, expr):
+    def match(self, expr):
         return match_expr(expr, self.expr)
 
 
@@ -113,11 +121,13 @@ def sum_capacity(patts):
 
 
 def match_expr(expr, patt):
-    # FIXME
-    # if expr.get_head() is None or patt.get_head() is None:
-    #     raise ValueError
-    # if not expr.get_head().same(patt.get_head()):
-    #     raise ValueError
+    assert expr.get_head() is not None
+    assert patt.get_head() is not None
+    assert expr.get_head().same(patt.get_head())
+
+    # empty case
+    if not expr.leaves and not patt.leaves:
+        return []
 
     head = expr.get_head()
 
@@ -128,90 +138,67 @@ def match_expr(expr, patt):
     # compile leaves
     slots = [compile_patt(leaf) for leaf in patt.leaves]
 
-    # # fast exit by patt capacity
-    # min_cap, max_cap = sum_capacity(slots)
-    # if min_cap > len(expr.leaves) or (max_cap is not None and max_cap < len(expr.leaves)):
-    #     return None
-
-    # TODO greedy matching
-
+    # find the matching generator
     if not is_orderless and not is_flat:
-        assignments = solve(slots, expr.leaves)
+        gen = gen_ordered_flatless(slots, expr.leaves)
     elif is_orderless and not is_flat:
-        assignments = solve_orderless(slots, expr.leaves)
+        gen = gen_orderless_flat(slots, expr.leaves)
     elif not is_orderless and is_flat:
-        # assignments = solve_flat(slots, expr.leaves)
-        pass
+        gen = gen_ordered_flat(slots, expr.leaves)
     elif is_orderless and is_flat:
-        # assignments = solve_orderless_flat(slots, expr.leaves)
-        pass
+        gen = gen_orderless_flatless(slots, expr.leaves)
+
+    # look for the first match
+    try:
+        match = next(gen)
+    except StopIteration:
+        return None
+
+    # rewrite match as a list of slot indices
+    assignments = []
+    for j, slot in enumerate(match):
+        for arg in slot:
+            assignments.append(j)
     return assignments
 
 
-def solve(slots, args):
+def gen_ordered_flatless(slots, args):
     '''
-    backtracking solver O(n^2) worst case but expected O(n) for e.g. f[__, __, ...]
+    Ordered flatless argument assignment generator.
     '''
-    assignments = []    # assigment[arg_index] = slot_index
-    i = 0   # slot index
-    j = 0   # how many args bound to current slot
-    backtrack = False    # did we arrive at this state by backtracking
-    while len(assignments) < len(args):
-        # print(assignments)
-        if not backtrack and i < len(slots) and j >= slots[i].min_args:
+    if len(slots) == 1:
+        slot = slots[0]
+        if (slot.min_args <= len(args) and
+            (slot.max_args is None or len(args) <= slot.max_args) and
+            slot.match(*args)):
 
-            # move to next slot
-            backtrack = False
-            i += 1
-            j = 0
-        elif (i < len(slots) and
-            (slots[i].max_args is None or j < slots[i].max_args) and
-            slots[i].match_single(args[len(assignments)])):
-
-            # assign arg to slot i
-            backtrack = False
-            assignments.append(i)
-            j += 1
-        else:
-            # backtrack to previous slot
-            backtrack = True
-
-            if i == 0:
-                # no solution
-                return None
-            while assignments and assignments[-1] == i:
-                assignments.pop()
-            i -= 1
-
-            # count how many args assigned to new slot
-            j = 0
-            while j < len(assignments) and assignments[-(j+1)] == i:
-                j += 1
-
-    # all args are assigned sucessfully
-    assert sorted(assignments) == assignments
-    assert len(assignments) == len(args)
-    assert all(slots[si].match_single(args[ai]) for ai, si in enumerate(assignments))
-
-    # check remaining slots are satisfied
-    while i < len(slots):
-        if slots[i].min_args > j:
-            return None
-        j = 0
-        i += 1
-
-    # all slots satisfied
-    for i, slot in enumerate(slots):
-        n = sum(1 for assignment in assignments if assignment == i)
-        assert slot.min_args <= n
-        assert slot.max_args is None or slot.max_args >= n
-
-    return assignments
+            yield [args]
+    elif len(slots) > 1:
+        slot = slots[0]
+        start = slot.min_args
+        end = (len(args) if slot.max_args is None else slot.max_args) + 1
+        if start > len(args) + 1:
+            return
+        if end > len(args) + 1:
+            end = len(args) + 1
+        assert start <= end
+        for i in range(start, end):
+            if not slot.match(*args[:i]):
+                continue
+            for right in gen_ordered_flatless(slots[1:], args[i:]):
+                yield [args[:i]] + right
 
 
-def solve_orderless(slots, args):
-    # TODO Fulkerson-Ford solver
-    pass
+def gen_orderless_flatless(slots, args):
+    raise NotImplementedError
+
+
+def gen_ordered_flat(slots, args):
+    raise NotImplementedError
+
+
+def gen_orderless_flat(slots, args):
+    raise NotImplementedError
 
 
 from mathics.core.parser import parse, SingleLineFeeder
