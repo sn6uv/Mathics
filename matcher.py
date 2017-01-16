@@ -51,6 +51,23 @@ class BlankNullSequencePattern(_BlankPattern):
         return self.expr is None or all(self.expr.same(expr.get_head()) for expr in exprs)
 
 
+class PatternPattern(CompiledPattern):
+    def __init__(self, patt):
+        n = len(patt.leaves)
+        if n == 2:
+            name = patt[0].get_name()
+            if not name:
+                raise PatternCompilationError('Pattern', 'patvar', patt)
+            sub_patt = compile_patt(patt)
+            self.min_args = sub_patt.min_args
+            self.max_args = sub_patt.max_args
+            self.sub_patt = sub_patt
+        raise PatternCompilationError('Pattern', 'argx', 'Pattern', n, 2)
+
+    def match(self, *exprs):
+        return self.sub_patt.match(self, *exprs)
+
+
 class ExpressionPattern(CompiledPattern):
     '''
     Represents a raw expression.
@@ -72,6 +89,8 @@ def compile_patt(patt):
         return BlankSequencePattern(patt)
     elif patt.has_form('BlankNullSequence', None):
         return BlankNullSequencePattern(patt)
+    elif patt.has_form('Pattern', None):
+        return PatternPattern(patt)
     else:
         return ExpressionPattern(patt)
 
