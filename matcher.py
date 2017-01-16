@@ -76,23 +76,6 @@ def compile_patt(patt):
         return ExpressionPattern(patt)
 
 
-def sum_capacity(patts):
-    '''
-    returns min and max capacity from a list of compiled patterns.
-    max capacity can be None.
-    '''
-    if not patts:
-        return 0, 0
-    assert not any(patt.min_args is None for patt in patts)
-    min_cap = sum(patt.min_args for patt in patts)
-    if any(patt.max_args is None for patt in patts):
-        max_cap = None
-    else:
-        max_cap = sum(patt.max_args for patt in patts)
-    assert max_cap is None or min_cap <= max_cap
-    return min_cap, max_cap
-
-
 def match_expr(expr, patt):
     '''
     Matches the arguments of two expressions.
