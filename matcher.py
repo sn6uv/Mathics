@@ -103,6 +103,43 @@ class PatternPattern(CompiledPattern):
         self.sub_patt.unmatch(*args)
 
 
+class AlternativesPattern(CompiledPattern):
+    '''
+    Note that Alternatives behaves weirdly for named patterns. Names in unbound
+    sub-patterns are used for replacement rules but not for checking the match.
+
+    Example:
+
+    >> f[g[x_]|y_Integer, x_] := {{x}, {y}}
+    >> f[1, 2]      (* x not checked *)
+     = {{2}, {1}}
+    >> f[g[1], 2]   (* x bound and checked *)
+     = f[g[1], 2]
+
+    This behaviour is acheived by implementing in the naive way.
+    '''
+    def __init__(self, patt, names):
+        sub_patts = [compile_patt(leaf, names) for leaf in patt.leaves]
+        self.min_args = min(sub_patt.min_args for sub_patt in sub_patts)
+        if any(sub_patt.max_args is None for sub_patt in sub_patts):
+            self.max_args = None
+        else:
+            self.max_args = max(sub_patt.max_args for sub_patt in sub_patts)
+        self.match_index = None
+        self.sub_patts = sub_patts
+
+    def match(self, *exprs):
+        for i, sub_patt in enumerate(self.sub_patts):
+            if check_len_args(sub_patt, exprs) and sub_patt.match(*exprs):
+                self.match_index = i
+                return True
+        return False
+
+    def unmatch(self, *exprs):
+        self.sub_patts[self.match_index].unmatch(*exprs)
+        self.match_index = None
+
+
 class ExpressionPattern(CompiledPattern):
     '''
     Represents a raw expression.
@@ -130,6 +167,8 @@ def compile_patt(patt, names):
         return BlankNullSequencePattern(patt)
     elif patt.has_form('Pattern', None):
         return PatternPattern(patt, names)
+    elif patt.has_form('Alternatives', None):
+        return AlternativesPattern(patt, names)
     else:
         return ExpressionPattern(patt)
 
@@ -280,6 +319,11 @@ tests = [
     ('f[1, 1]', 'f[x_, x_]', [0, 1]),
     ('f[1, 2, 1]', 'f[x_, y_, x_]', [0, 1, 2]),
     ('f[1, 2, 3, 1, 2]', 'f[x__, y__, x__]', [0, 0, 1, 2, 2]),
+    ('f[1]', 'f[1|2]', [0]),
+    ('f[3]', 'f[1|2]', None),
+    ('f[1, 2]', 'f[x_Symbol|y_Integer, x_]', [0, 1]),
+    ('f[a, 2]', 'f[x_Symbol|y_Integer, x_]', None),
+    ('f[a, a]', 'f[x_Symbol|y_Integer, x_]', [0, 1]),
 ]
 
 tests = [(_parse(expr), _parse(patt), result) for expr, patt, result in tests]
