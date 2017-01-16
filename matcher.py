@@ -114,7 +114,11 @@ class ExpressionPattern(CompiledPattern):
         self.expr = patt
 
     def match(self, expr):
-        return match_expr(expr, self.expr)
+        if self.expr.is_atom() and expr.is_atom():
+            return self.expr.same(expr)
+        elif not self.expr.is_atom() and not expr.is_atom():
+            return match_expr(expr, self.expr)
+        return False
 
 
 def compile_patt(patt, names):
@@ -241,7 +245,10 @@ tests = [
     ('f[]', 'f[]', []),
     ('f[]', 'f[_]', None),
     ('f[1]', 'f[]', None),
-    # ('f[1]', 'f[1]', [0]),
+    ('f[1]', 'f[1]', [0]),
+    ('f[f[1]]', 'f[f[1]]', [0]),
+    ('f[1]', 'f[f[1]]', None),
+    ('f[f[1]]', 'f[1]', None),
     ('f[1]', 'f[_]', [0]),
     ('f[1, 2]', 'f[_]', None),
     ('f[1, 2]', 'f[_, _]', [0, 1]),
