@@ -147,15 +147,23 @@ class ExpressionPattern(CompiledPattern):
     min_args = 1
     max_args = 1
 
-    def __init__(self, patt):
+    def __init__(self, patt, names):
         self.expr = patt
+        self.names = names
+        self.old_names = None
 
     def match(self, expr):
         if self.expr.is_atom() and expr.is_atom():
             return self.expr.same(expr)
         elif not self.expr.is_atom() and not expr.is_atom():
-            return match_expr(expr, self.expr)
+            self.old_names = self.names.copy()
+            return match_expr(expr, self.expr, self.names)
         return False
+
+    def unmatch(self, expr):
+        self.names.clear()
+        self.names.update(self.old_names)
+        self.old_names = None
 
 
 def compile_patt(patt, names):
@@ -170,7 +178,7 @@ def compile_patt(patt, names):
     elif patt.has_form('Alternatives', None):
         return AlternativesPattern(patt, names)
     else:
-        return ExpressionPattern(patt)
+        return ExpressionPattern(patt, names)
 
 
 def check_len_args(slot, args):
@@ -181,30 +189,33 @@ def check_len_args(slot, args):
     return True
 
 
-def match_expr(expr, patt):
+def match_expr(expr, patt, names=None):
     '''
     Matches the arguments of two expressions.
 
     e.g. Does f[1, 2] match f[_, _Integer]?
 
-    returns a list of integers
+    :expr Expression: expression to match.
+    :patt Expression: pattern against which to match.
+    :names dict: predefined named match variables.
+    :returns (list, dict): match positions for each argument and named matches.
     '''
     assert expr.get_head() is not None
     assert patt.get_head() is not None
     assert expr.get_head().same(patt.get_head())
 
+    if names is None:
+        names = {}
+
     # empty case
     if not expr.leaves and not patt.leaves:
-        return []
+        return [], names
 
     head = expr.get_head()
 
     # TODO look at head attributes
     is_orderless = False
     is_flat = False
-
-    # named patterns
-    names = {}
 
     # compile leaves
     slots = [compile_patt(leaf, names) for leaf in patt.leaves]
@@ -223,14 +234,14 @@ def match_expr(expr, patt):
     try:
         match = next(gen)
     except StopIteration:
-        return None
+        return None, names
 
     # rewrite match as a list of slot indices
     assignments = []
     for j, slot in enumerate(match):
         for arg in slot:
             assignments.append(j)
-    return assignments
+    return assignments, names
 
 
 def gen_ordered_flatless(slots, args):
@@ -288,7 +299,7 @@ def _parse(expr_string):
     return parse(definitions, SingleLineFeeder(expr_string))
 
 
-tests = [
+_tests = [
     ('f[]', 'f[]', []),
     ('f[]', 'f[_]', None),
     ('f[1]', 'f[]', None),
@@ -314,19 +325,32 @@ tests = [
     ('f[1, b, 1, c]', 'f[___, _Integer, _Integer, ___]', None),
     ('f[1]', 'f[_, ___]', [0]),
     ('f[1]', 'f[_, ___, _]', None),
-    ('f[1]', 'f[x_]', [0]),
+    ('f[1]', 'f[x_]', [0], {'x': (1, '1')}),
     ('f[1, 2]', 'f[x_, x_]', None),
-    ('f[1, 1]', 'f[x_, x_]', [0, 1]),
-    ('f[1, 2, 1]', 'f[x_, y_, x_]', [0, 1, 2]),
-    ('f[1, 2, 3, 1, 2]', 'f[x__, y__, x__]', [0, 0, 1, 2, 2]),
+    ('f[1, 1]', 'f[x_, x_]', [0, 1], {'x': (2, '1')}),
+    ('f[1, 2, 1]', 'f[x_, y_, x_]', [0, 1, 2], {'x': (2, '1'), 'y': (1, '2')}),
+    ('f[1, 2, 3, 1, 2]', 'f[x__, y__, x__]', [0, 0, 1, 2, 2], {'x': (2, '1', '2'), 'y': (1, '3')}),
     ('f[1]', 'f[1|2]', [0]),
     ('f[3]', 'f[1|2]', None),
-    ('f[1, 2]', 'f[x_Symbol|y_Integer, x_]', [0, 1]),
+    ('f[1, 2]', 'f[x_Symbol|y_Integer, x_]', [0, 1], {'y': (1, '1'), 'x': (1, '2')}),
     ('f[a, 2]', 'f[x_Symbol|y_Integer, x_]', None),
-    ('f[a, a]', 'f[x_Symbol|y_Integer, x_]', [0, 1]),
+    ('f[a, a]', 'f[x_Symbol|y_Integer, x_]', [0, 1], {'x': (2, 'a')}),
+    ('f[f[1]]', 'f[f[x_]]', [0], {'x': (1, '1')}),
+    ('f[f[1], 1]', 'f[f[x_], x_]', [0, 1], {'x': (2, '1')}),
+    ('f[f[1], 2]', 'f[f[x_], x_]', None),
 ]
 
-tests = [(_parse(expr), _parse(patt), result) for expr, patt, result in tests]
+
+# parse tests
+tests = []
+for test in _tests:
+    if len(test) == 3:
+        expr, patt, slots = test
+        names = {}
+    elif len(test) == 4:
+        expr, patt, slots, names = test
+    names = {_parse(key).get_name(): (values[0], tuple(_parse(value) for value in values[1:])) for key, values in names.items()}
+    tests.append((_parse(expr), _parse(patt), (slots, names)))
 
 
 for expr, patt, result in tests:
