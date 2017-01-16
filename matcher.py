@@ -252,6 +252,7 @@ def gen_orderless_flat(slots, args):
 
 
 from time import time
+import cProfile
 
 from mathics.core.parser import parse, SingleLineFeeder
 from mathics.core.definitions import Definitions
@@ -332,11 +333,16 @@ for expr, patt, result in tests:
     if result != got:
         print('match_expr(%s, %s) = %s, expected %s' % (expr, patt, got, result))
 
-stime = time()
-for _ in range(1000):
-    for expr, patt, result in tests:
-        for _ in match_expr(expr, patt):
-            pass
-ftime = time()
+def run_tests(n):
+    for _ in range(n):
+        for expr, patt, result in tests:
+            for _ in match_expr(expr, patt):
+                pass
 
-print('duration: %.5f' % (ftime - stime))
+command = 'run_tests(1000)'
+cProfile.runctx(command, globals(), locals(), filename="pattern_ordererd.profile" )
+
+# stime = time()
+# run_tests(1000)
+# ftime = time()
+# print('duration: %.5f' % (ftime - stime))
