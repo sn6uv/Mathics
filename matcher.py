@@ -12,8 +12,20 @@ class CompiledPattern(object):
     min_args = 1
     max_args = 1
 
-    def match(self):
+    def match(self, *exprs):
+        '''
+        Does the pattern match the tuple of expressions, exprs?
+        Tracks named variables if they match.
+        returns bool: True if the exprs match and False otherwise.
+        '''
         raise NotImplementedError
+
+    def unmatch(self, *args):
+        '''
+        Untracks named variables.
+        returns None.
+        '''
+        pass
 
 
 class _BlankPattern(CompiledPattern):
@@ -52,20 +64,43 @@ class BlankNullSequencePattern(_BlankPattern):
 
 
 class PatternPattern(CompiledPattern):
-    def __init__(self, patt):
+    def __init__(self, patt, names):
         n = len(patt.leaves)
         if n == 2:
-            name = patt[0].get_name()
+            name = patt.leaves[0].get_name()
             if not name:
                 raise PatternCompilationError('Pattern', 'patvar', patt)
-            sub_patt = compile_patt(patt)
+            sub_patt = compile_patt(patt.leaves[1], names)
             self.min_args = sub_patt.min_args
             self.max_args = sub_patt.max_args
             self.sub_patt = sub_patt
-        raise PatternCompilationError('Pattern', 'argx', 'Pattern', n, 2)
+            self.name = name
+            self.names = names
+        else:
+            raise PatternCompilationError('Pattern', 'argx', 'Pattern', n, 2)
 
     def match(self, *exprs):
-        return self.sub_patt.match(self, *exprs)
+        if self.sub_patt.match(*exprs):
+            count, known_exprs = self.names.get(self.name, (0, None))
+            assert count >= 0
+            if count > 0:
+                # check equality with known_exprs
+                if len(known_exprs) != len(exprs):
+                    return False
+                if not all(known_expr.same(expr) for known_expr, expr in zip(known_exprs, exprs)):
+                    return False
+            self.names[self.name] = (count + 1, exprs)
+            return True
+        return False
+
+    def unmatch(self, *args):
+        count, known_args = self.names[self.name]
+        assert count >= 1
+        if count == 1:
+            del self.names[self.name]
+        else:
+            self.names[self.name] = (count - 1, args)
+        self.sub_patt.unmatch(*args)
 
 
 class ExpressionPattern(CompiledPattern):
@@ -82,7 +117,7 @@ class ExpressionPattern(CompiledPattern):
         return match_expr(expr, self.expr)
 
 
-def compile_patt(patt):
+def compile_patt(patt, names):
     if patt.has_form('Blank', None):
         return BlankPattern(patt)
     elif patt.has_form('BlankSequence', None):
@@ -90,7 +125,7 @@ def compile_patt(patt):
     elif patt.has_form('BlankNullSequence', None):
         return BlankNullSequencePattern(patt)
     elif patt.has_form('Pattern', None):
-        return PatternPattern(patt)
+        return PatternPattern(patt, names)
     else:
         return ExpressionPattern(patt)
 
@@ -117,8 +152,11 @@ def match_expr(expr, patt):
     is_orderless = False
     is_flat = False
 
+    # named patterns
+    names = {}
+
     # compile leaves
-    slots = [compile_patt(leaf) for leaf in patt.leaves]
+    slots = [compile_patt(leaf, names) for leaf in patt.leaves]
 
     # find the appropriate matching generator
     if not is_orderless and not is_flat:
@@ -152,6 +190,7 @@ def gen_ordered_flatless(slots, args):
         slot = slots[0]
         if slot.min_args <= len(args) and (slot.max_args is None or len(args) <= slot.max_args) and slot.match(*args):
             yield [args]
+            slot.unmatch(*args)
     elif len(slots) > 1:
         slot = slots[0]
         start = slot.min_args
@@ -166,6 +205,7 @@ def gen_ordered_flatless(slots, args):
                 continue
             for right in gen_ordered_flatless(slots[1:], args[i:]):
                 yield [args[:i]] + right
+            slot.unmatch(*args[:i])
 
 
 def gen_orderless_flatless(slots, args):
@@ -220,6 +260,11 @@ tests = [
     ('f[1, b, 1, c]', 'f[___, _Integer, _Integer, ___]', None),
     ('f[1]', 'f[_, ___]', [0]),
     ('f[1]', 'f[_, ___, _]', None),
+    ('f[1]', 'f[x_]', [0]),
+    ('f[1, 2]', 'f[x_, x_]', None),
+    ('f[1, 1]', 'f[x_, x_]', [0, 1]),
+    ('f[1, 2, 1]', 'f[x_, y_, x_]', [0, 1, 2]),
+    ('f[1, 2, 3, 1, 2]', 'f[x__, y__, x__]', [0, 0, 1, 2, 2]),
 ]
 
 tests = [(_parse(expr), _parse(patt), result) for expr, patt, result in tests]
@@ -231,7 +276,7 @@ for expr, patt, result in tests:
         print('match_expr(%s, %s) = %s, expected %s' % (expr, patt, got, result))
 
 stime = time()
-for _ in range(10000):
+for _ in range(1000):
     for expr, patt, result in tests:
         match_expr(expr, patt)
 ftime = time()
