@@ -36,9 +36,8 @@ class PatternCompilationError(Exception):
 
 
 class CompiledPattern(object):
-    min_capacity = None
-    max_capacity = None
-    is_ordered = True
+    min_args = None
+    max_args = None
 
     def match_single(self):
         raise NotImplementedError
@@ -59,18 +58,18 @@ class _BlankPattern(CompiledPattern):
 
 
 class BlankPattern(_BlankPattern):
-    min_capacity = 1
-    max_capacity = 1
+    min_args = 1
+    max_args = 1
 
 
 class BlankSequencePattern(_BlankPattern):
-    min_capacity = 1
-    max_capacity = None
+    min_args = 1
+    max_args = None
 
 
 class BlankNullSequencePattern(_BlankPattern):
-    min_capacity = 0
-    max_capacity = None
+    min_args = 0
+    max_args = None
 
 
 class ExpressionPattern(CompiledPattern):
@@ -103,12 +102,12 @@ def sum_capacity(patts):
     '''
     if not patts:
         return 0, 0
-    assert not any(patt.min_capacity is None for patt in patts)
-    min_cap = sum(patt.min_capacity for patt in patts)
-    if any(patt.max_capacity is None for patt in patts):
+    assert not any(patt.min_args is None for patt in patts)
+    min_cap = sum(patt.min_args for patt in patts)
+    if any(patt.max_args is None for patt in patts):
         max_cap = None
     else:
-        max_cap = sum(patt.max_capacity for patt in patts)
+        max_cap = sum(patt.max_args for patt in patts)
     assert max_cap is None or min_cap <= max_cap
     return min_cap, max_cap
 
@@ -159,14 +158,14 @@ def solve(slots, args):
     backtrack = False    # did we arrive at this state by backtracking
     while len(assignments) < len(args):
         # print(assignments)
-        if not backtrack and i < len(slots) and j >= slots[i].min_capacity:
+        if not backtrack and i < len(slots) and j >= slots[i].min_args:
 
             # move to next slot
             backtrack = False
             i += 1
             j = 0
         elif (i < len(slots) and
-            (slots[i].max_capacity is None or j < slots[i].max_capacity) and
+            (slots[i].max_args is None or j < slots[i].max_args) and
             slots[i].match_single(args[len(assignments)])):
 
             # assign arg to slot i
@@ -196,7 +195,7 @@ def solve(slots, args):
 
     # check remaining slots are satisfied
     while i < len(slots):
-        if slots[i].min_capacity > j:
+        if slots[i].min_args > j:
             return None
         j = 0
         i += 1
@@ -204,8 +203,8 @@ def solve(slots, args):
     # all slots satisfied
     for i, slot in enumerate(slots):
         n = sum(1 for assignment in assignments if assignment == i)
-        assert slot.min_capacity <= n
-        assert slot.max_capacity is None or slot.max_capacity >= n
+        assert slot.min_args <= n
+        assert slot.max_args is None or slot.max_args >= n
 
     return assignments
 
