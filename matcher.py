@@ -255,6 +255,32 @@ class ConditionPattern(CompiledPattern):
                 yield None
 
 
+class OptionalPattern(CompiledPattern):
+    def __init__(self, patt, ctx):
+        n = len(patt.leaves)
+        if n == 1:
+            raise NotImplementedError
+        elif n == 2:
+            sub_patt = compile_patt(patt.leaves[0], ctx)
+            # self.min_args = sub_patt.min_args
+            self.min_args = 0
+            self.max_args = sub_patt.max_args
+            self.sub_patt = sub_patt
+            self.default = patt.leaves[1]
+        else:
+            raise PatternCompilationError('Optional', 'argx', 'Optional', n, 2)
+
+    def match(self, *exprs):
+        if len(exprs) == 0:
+            raise NotImplementedError
+            # TODO assign name to self.default
+            yield None
+            # TODO unassign name
+        elif self.sub_patt.min_args >= len(exprs):
+            for _ in self.sub_patt.match(*exprs):
+                yield None
+
+
 class ExpressionPattern(CompiledPattern):
     '''
     Represents a raw expression.
