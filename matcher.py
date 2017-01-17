@@ -1,6 +1,12 @@
 from __future__ import print_function
 
 
+class PatternContext(object):
+    def __init__(self, evaluation):
+        self.names = {}
+        self.evaluation = evaluation
+
+
 class PatternCompilationError(Exception):
     def __init__(self, tag, name, *args):
         self.tag = tag
@@ -62,18 +68,18 @@ class BlankNullSequencePattern(_BlankPattern):
 
 class PatternPattern(CompiledPattern):
 
-    def __init__(self, patt, names):
+    def __init__(self, patt, ctx):
         n = len(patt.leaves)
         if n == 2:
             name = patt.leaves[0].get_name()
             if not name:
                 raise PatternCompilationError('Pattern', 'patvar', patt)
-            sub_patt = compile_patt(patt.leaves[1], names)
+            sub_patt = compile_patt(patt.leaves[1], ctx)
             self.min_args = sub_patt.min_args
             self.max_args = sub_patt.max_args
             self.sub_patt = sub_patt
             self.name = name
-            self.names = names
+            self.names = ctx.names
         else:
             raise PatternCompilationError('Pattern', 'argx', 'Pattern', n, 2)
 
@@ -108,8 +114,8 @@ class AlternativesPattern(CompiledPattern):
     This behaviour is acheived by implementing in the naive way.
     '''
 
-    def __init__(self, patt, names):
-        sub_patts = [compile_patt(leaf, names) for leaf in patt.leaves]
+    def __init__(self, patt, ctx):
+        sub_patts = [compile_patt(leaf, ctx) for leaf in patt.leaves]
         self.min_args = min(sub_patt.min_args for sub_patt in sub_patts)
         if any(sub_patt.max_args is None for sub_patt in sub_patts):
             self.max_args = None
@@ -155,14 +161,14 @@ class ExceptPattern(CompiledPattern):
     useful however.
     """
 
-    def __init__(self, patt, names):
+    def __init__(self, patt, ctx):
         n = len(patt.leaves)
         if n == 1:
             self.sub_patt = None
             self.min_args = 1
             self.max_args = 1
         elif n == 2:
-            sub_patt = compile_patt(patt.leaves[1], names)
+            sub_patt = compile_patt(patt.leaves[1], ctx)
             self.min_args = sub_patt.min_args
             self.max_args = sub_patt.max_args
             self.sub_patt = sub_patt
@@ -172,7 +178,7 @@ class ExceptPattern(CompiledPattern):
         # look for named patterns in first argument
         if has_named(patt.leaves[0]):
             raise PatternCompilationError('Except', 'named', patt)
-        self.exc_patt = compile_patt(patt.leaves[0], names)
+        self.exc_patt = compile_patt(patt.leaves[0], ctx)
 
     def match(self, *exprs):
         # check if exc_patt matches
@@ -201,9 +207,10 @@ class ExpressionPattern(CompiledPattern):
     min_args = 1
     max_args = 1
 
-    def __init__(self, patt, names):
+    def __init__(self, patt, ctx):
         self.expr = patt
-        self.names = names
+        self.ctx = ctx
+        self.names = ctx.names
 
     def match(self, expr):
         if self.expr.is_atom() and expr.is_atom():
@@ -211,13 +218,13 @@ class ExpressionPattern(CompiledPattern):
                 yield None
         elif not self.expr.is_atom() and not expr.is_atom():
             old_names = self.names.copy()
-            for _ in match_expr(expr, self.expr, self.names):
+            for _ in match_expr(expr, self.expr, self.ctx):
                 yield None
                 self.names.clear()
                 self.names.update(old_names)
 
 
-def compile_patt(patt, names):
+def compile_patt(patt, ctx):
     if patt.has_form('Blank', None):
         return BlankPattern(patt)
     elif patt.has_form('BlankSequence', None):
@@ -225,16 +232,16 @@ def compile_patt(patt, names):
     elif patt.has_form('BlankNullSequence', None):
         return BlankNullSequencePattern(patt)
     elif patt.has_form('Pattern', None):
-        return PatternPattern(patt, names)
+        return PatternPattern(patt, ctx)
     elif patt.has_form('Alternatives', None):
-        return AlternativesPattern(patt, names)
+        return AlternativesPattern(patt, ctx)
     elif patt.has_form('Except', None):
-        return ExceptPattern(patt, names)
+        return ExceptPattern(patt, ctx)
     else:
-        return ExpressionPattern(patt, names)
+        return ExpressionPattern(patt, ctx)
 
 
-def match_expr(expr, patt, names=None):
+def match_expr(expr, patt, ctx):
     '''
     Matches the arguments of two expressions.
 
@@ -249,12 +256,9 @@ def match_expr(expr, patt, names=None):
     assert patt.get_head() is not None
     assert expr.get_head().same(patt.get_head())
 
-    if names is None:
-        names = {}
-
     # empty case
     if not expr.leaves and not patt.leaves:
-        yield [], names
+        yield []
         return
 
     head = expr.get_head()
@@ -264,7 +268,7 @@ def match_expr(expr, patt, names=None):
     is_flat = False
 
     # compile leaves
-    slots = [compile_patt(leaf, names) for leaf in patt.leaves]
+    slots = [compile_patt(leaf, ctx) for leaf in patt.leaves]
 
     # find the appropriate matching generator
     if not is_orderless and not is_flat:
@@ -283,7 +287,7 @@ def match_expr(expr, patt, names=None):
         for j, slot in enumerate(match):
             for arg in slot:
                 assignments.append(j)
-        yield assignments, names
+        yield assignments
     return
 
 
@@ -400,10 +404,10 @@ for test in _tests:
     names = {_parse(key).get_name(): (values[0], tuple(_parse(value) for value in values[1:])) for key, values in names.items()}
     tests.append((_parse(expr), _parse(patt), (slots, names)))
 
-
 for expr, patt, result in tests:
+    ctx = PatternContext(Evaluation(definitions))
     try:
-        got = next(match_expr(expr, patt))
+        got = next(match_expr(expr, patt, ctx)), ctx.names
     except StopIteration:
         got = None, {}
 
@@ -413,7 +417,7 @@ for expr, patt, result in tests:
 def run_tests(n):
     for _ in range(n):
         for expr, patt, result in tests:
-            for _ in match_expr(expr, patt):
+            for _ in match_expr(expr, patt, ctx):
                 pass
 
 command = 'run_tests(1000)'
