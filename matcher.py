@@ -492,6 +492,9 @@ for test in _tests:
     names = {_parse(key).get_name(): (values[0], tuple(_parse(value) for value in values[1:])) for key, values in names.items()}
     tests.append((_parse(expr), _parse(patt), (slots, names)))
 
+
+# run tests
+flag = True
 for expr, patt, result in tests:
     ctx = PatternContext(Evaluation(definitions))
     try:
@@ -501,7 +504,14 @@ for expr, patt, result in tests:
 
     if result != got:
         print('match_expr(%s, %s) = %s, expected %s' % (expr, patt, got, result))
+        flag = False
+if flag:
+    print('tests pass')
+else:
+    print('tests fail')
 
+
+# benchmark tests
 def run_tests(n):
     for _ in range(n):
         for expr, patt, result in tests:
