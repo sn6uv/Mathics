@@ -200,6 +200,61 @@ class ExceptPattern(CompiledPattern):
                 yield None
 
 
+class PatternTestPattern(CompiledPattern):
+    def __init__(self, patt, ctx):
+        n = len(patt.leaves)
+        if n == 1:
+            raise PatternCompilationError('PatternTest', 'argr', 'PatternTest', 2)
+        elif n == 2:
+            sub_patt = compile_patt(patt.leaves[0], ctx)
+            self.min_args = sub_patt.min_args
+            self.max_args = sub_patt.max_args
+            self.sub_patt = sub_patt
+            self.test = patt.leaves[1]
+            self.evaluation = ctx.evaluation
+        else:
+            raise PatternCompilationError('PatternTest', 'argx', 'PatternTest', n, 2)
+
+    def match(self, *exprs):
+        if all(Expression(self.test, expr).evaluate(self.evaluation).is_true() for expr in exprs):
+            for _ in self.sub_patt.match(*exprs):
+                yield None
+
+
+def replace_names(expr, names):
+    '''
+    Replaces all occurences of named symbols in expr.
+    '''
+    if expr.is_atom():
+        return names.get(expr.get_name(), expr)
+    else:
+        return Expression(replace_names(expr.head, names), *(replace_names(leaf, names) for leaf in expr.leaves))
+
+
+class ConditionPattern(CompiledPattern):
+    def __init__(self, patt, ctx):
+        n = len(patt.leaves)
+        if n == 1:
+            raise PatternCompilationError('Condition', 'argr', 'Condition', 2)
+        elif n == 2:
+            sub_patt = compile_patt(patt.leaves[0], ctx)
+            self.min_args = sub_patt.min_args
+            self.max_args = sub_patt.max_args
+            self.sub_patt = sub_patt
+            self.cond = patt.leaves[1]
+            self.names = ctx.names
+            self.evaluation = ctx.evaluation
+        else:
+            raise PatternCompilationError('Condition', 'argx', 'Condition', n, 2)
+
+    def match(self, *exprs):
+        for _ in self.sub_patt.match(*exprs):
+            names = {name: Expression('Sequence', *exprs) for name, (count, exprs) in self.names.items() if count > 0}
+            cond = replace_names(self.cond, names)
+            if cond.evaluate(self.evaluation).is_true():
+                yield None
+
+
 class ExpressionPattern(CompiledPattern):
     '''
     Represents a raw expression.
@@ -237,6 +292,10 @@ def compile_patt(patt, ctx):
         return AlternativesPattern(patt, ctx)
     elif patt.has_form('Except', None):
         return ExceptPattern(patt, ctx)
+    elif patt.has_form('PatternTest', None):
+        return PatternTestPattern(patt, ctx)
+    elif patt.has_form('Condition', None):
+        return ConditionPattern(patt, ctx)
     else:
         return ExpressionPattern(patt, ctx)
 
@@ -390,6 +449,15 @@ _tests = [
     ('f[a]', 'f[Except[_Integer, x_]]', [0], {'x': (1, 'a')}),
     ('f[a, 1]', 'f[x:Except[__Integer, __]]', [0, 0], {'x': (1, 'a', '1')}),
     ('f[2, 1]', 'f[x:Except[__Integer, __]]', None),
+    ('f[1]', 'f[_?NumberQ]', [0]),
+    ('f[a]', 'f[_?NumberQ]', None),
+    ('f[1, 2]', 'f[__?NumberQ]', [0, 0]),
+    ('f[1, a]', 'f[__?NumberQ]', None),
+    ('f[a, 2]', 'f[__?NumberQ]', None),
+    ('f[a, b]', 'f[__?NumberQ]', None),
+    ('f[1, 2]', 'f[x__?NumberQ]', [0, 0], {'x': (1, '1', '2')}),
+    ('f[0]', 'f[x_/;x>0]', None),
+    ('f[1]', 'f[x_/;x>0]', [0], {'x': (1, '1')}),
 ]
 
 
