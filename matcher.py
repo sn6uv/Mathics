@@ -123,6 +123,49 @@ class AlternativesPattern(CompiledPattern):
                 for _ in sub_patt.match(*exprs):
                     yield None
 
+class RepeatedPattern(CompiledPattern):
+    def __init__(self, patt, names):
+        n = len(patt.leaves)
+        min_times = None
+        if n == 1:
+            self.sub_patt = compile_patt(patt.leaves[0], names)
+            min_times = 1
+            max_times = None
+        elif n == 2:
+            spec = patt.leaves[1]
+            int_spec = spec.get_int_value()
+            if int_spec is not None:
+                min_times = 1
+                max_times = int_spec
+            elif spec.has_form('List', 1):
+                min_times= spec.leaves[0].get_int_value()
+                max_times= spec.leaves[0].get_int_value()
+            elif spec.has_form('List', 2):
+                min_times = spec.leaves[0].get_int_value()
+                min_times = spec.leaves[1].get_int_value()
+                if max_times is None:
+                    min_times = None
+        else:
+            raise PatternCompilationError('Repeated', 'argt', 'Repeated', n, 1, 2)
+
+        if min_times is None:
+            raise PatternCompilationError('Repeated', 'range', 'Repeated', 2, patt)
+        if max_times is not None and max_times < min_times:
+            raise PatternCompilationError('Repeated', 'order', patt)
+
+        assert max_times is None or min_times <= max_times
+
+        sub_patt = compile_patt(patt.leaves[0], names)
+        self.min_args = sub_patt.min_args
+
+        self.max_args = sub_patt.max_args
+        self.sub_patt = sub_patt
+        self.min_times = min_times
+        self.max_times = max_times
+
+    def match(self, *exprs):
+        raise NotImplementedError
+
 
 class ExpressionPattern(CompiledPattern):
     '''
@@ -158,6 +201,8 @@ def compile_patt(patt, names):
         return PatternPattern(patt, names)
     elif patt.has_form('Alternatives', None):
         return AlternativesPattern(patt, names)
+    elif patt.has_form('Repeated', None):
+        return RepeatedPattern(patt, names)
     else:
         return ExpressionPattern(patt, names)
 
@@ -309,6 +354,8 @@ _tests = [
     ('f[f[1], 1]', 'f[f[x_], x_]', [0, 1], {'x': (2, '1')}),
     ('f[f[1], 2]', 'f[f[x_], x_]', None),
     ('f[f[1], 2]', 'f[f[x_]|y_, x_]', [0, 1], {'x': (1, '2'), 'y': (1, 'f[1]')}),
+    ('f[1, 2]', 'f[(x_)..]', None),
+    ('f[1, 2]', 'f[x:Repeated[_]]', [0, 0], {'x': (1, '1', '2')}),
 ]
 
 
