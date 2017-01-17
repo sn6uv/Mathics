@@ -254,6 +254,21 @@ class ConditionPattern(CompiledPattern):
             if cond.evaluate(self.evaluation).is_true():
                 yield None
 
+class VerbatimPattern(CompiledPattern):
+    min_args = 1
+    max_args = 1
+
+    def __init__(self, patt):
+        n = len(patt.leaves)
+        if n == 1:
+            self.expr = patt.leaves[0]
+        else:
+            raise PatternCompilationError('Verbatim', 'argx', 'Verbatim', n)
+
+    def match(self, expr):
+        if self.expr.same(expr):
+            yield None
+
 
 class ExpressionPattern(CompiledPattern):
     '''
@@ -296,6 +311,8 @@ def compile_patt(patt, ctx):
         return PatternTestPattern(patt, ctx)
     elif patt.has_form('Condition', None):
         return ConditionPattern(patt, ctx)
+    elif patt.has_form('Verbatim', None):
+        return VerbatimPattern(patt)
     else:
         return ExpressionPattern(patt, ctx)
 
@@ -458,6 +475,9 @@ _tests = [
     ('f[1, 2]', 'f[x__?NumberQ]', [0, 0], {'x': (1, '1', '2')}),
     ('f[0]', 'f[x_/;x>0]', None),
     ('f[1]', 'f[x_/;x>0]', [0], {'x': (1, '1')}),
+    ('f[_]', 'f[Verbatim[_]]', [0]),
+    ('f[1]', 'f[Verbatim[_]]', None),
+    ('f[g[_]]', 'f[Verbatim[g[_]]]', [0]),
 ]
 
 
