@@ -123,6 +123,76 @@ class AlternativesPattern(CompiledPattern):
                 for _ in sub_patt.match(*exprs):
                     yield None
 
+def has_named(expr):
+    if expr.is_atom():
+        return False
+    if expr.has_form('Pattern', None):
+        return True
+    if any(has_named(leaf) for leaf in expr.leaves):
+        return True
+
+
+class ExceptPattern(CompiledPattern):
+    """
+    Except is buggy with named variables in Mathematica 11.0.1.
+
+    Example:
+
+    >> f[Except[x_Integer]] := {x}
+    >> f[a]
+     = {Removed[$Variable][1]}
+
+    The solution is to prohibit named patterns in the first argument.
+
+    Mathematica also doesn't allow variable length second arguments.
+
+    Example:
+
+    >> MatchQ[f[a, 1], f[Except[__Integer, __]]]
+    : A variable-length pattern is not allowed as the second argument in Except[__Integer, __]
+
+    There is no practical reason to prohibit this. They're not particularly
+    useful however.
+    """
+
+    def __init__(self, patt, names):
+        n = len(patt.leaves)
+        if n == 1:
+            self.sub_patt = None
+            self.min_args = 1
+            self.max_args = 1
+        elif n == 2:
+            sub_patt = compile_patt(patt.leaves[1], names)
+            self.min_args = sub_patt.min_args
+            self.max_args = sub_patt.max_args
+            self.sub_patt = sub_patt
+        else:
+            raise PatternCompilationError('Except', 'argt', 'Except', n, 1, 2)
+
+        # look for named patterns in first argument
+        if has_named(patt.leaves[0]):
+            raise PatternCompilationError('Except', 'named', patt)
+        self.exc_patt = compile_patt(patt.leaves[0], names)
+
+    def match(self, *exprs):
+        # check if exc_patt matches
+        if self.exc_patt.min_args <= len(exprs) and (self.exc_patt.max_args is None or len(exprs) <= self.exc_patt.max_args):
+            try:
+                next(self.exc_patt.match(*exprs))
+            except StopIteration:
+                pass
+            else:
+                return
+        else:
+            return
+
+        # check if sub_patt matches
+        if self.sub_patt is None:
+            yield None
+        else:
+            for _ in self.sub_patt.match(*exprs):
+                yield None
+
 
 class ExpressionPattern(CompiledPattern):
     '''
@@ -158,6 +228,8 @@ def compile_patt(patt, names):
         return PatternPattern(patt, names)
     elif patt.has_form('Alternatives', None):
         return AlternativesPattern(patt, names)
+    elif patt.has_form('Except', None):
+        return ExceptPattern(patt, names)
     else:
         return ExpressionPattern(patt, names)
 
@@ -309,6 +381,11 @@ _tests = [
     ('f[f[1], 1]', 'f[f[x_], x_]', [0, 1], {'x': (2, '1')}),
     ('f[f[1], 2]', 'f[f[x_], x_]', None),
     ('f[f[1], 2]', 'f[f[x_]|y_, x_]', [0, 1], {'x': (1, '2'), 'y': (1, 'f[1]')}),
+    ('f[1]', 'f[Except[_Integer]]', None),
+    ('f[a]', 'f[Except[_Integer]]', [0]),
+    ('f[a]', 'f[Except[_Integer, x_]]', [0], {'x': (1, 'a')}),
+    ('f[a, 1]', 'f[x:Except[__Integer, __]]', [0, 0], {'x': (1, 'a', '1')}),
+    ('f[2, 1]', 'f[x:Except[__Integer, __]]', None),
 ]
 
 
